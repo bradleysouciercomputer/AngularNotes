@@ -1,4 +1,4 @@
-import { CommonModule, DatePipe } from '@angular/common';
+import { CommonModule } from '@angular/common';
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -77,7 +77,7 @@ function readStoredNotes(): Note[] {
   selector: 'app-root',
   standalone: true,
   imports: [
-    CommonModule, DatePipe, FormsModule, MatButtonModule, MatCardModule, MatChipsModule,
+    CommonModule, FormsModule, MatButtonModule, MatCardModule, MatChipsModule,
     MatDialogModule, MatDividerModule, MatFormFieldModule, MatIconModule, MatInputModule,
     MatListModule, MatMenuModule, MatSelectModule, MatSidenavModule, MatSnackBarModule,
     MatToolbarModule, MatTooltipModule
