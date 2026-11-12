@@ -6,8 +6,31 @@
 </div>
 
 <mat-dialog-content class="editor-content">
+  <div class="editor-type-switch" role="group" aria-label="Note type">
+    <button mat-button type="button" [class.type-active]="type === 'text'" (click)="type = 'text'">
+      <mat-icon>notes</mat-icon> Text
+    </button>
+    <button mat-button type="button" [class.type-active]="type === 'checklist'" (click)="type = 'checklist'">
+      <mat-icon>checklist</mat-icon> Checklist
+    </button>
+  </div>
+
   <input matInput class="editor-title" [(ngModel)]="title" name="title" maxlength="120" placeholder="Title" aria-label="Note title">
-  <textarea matInput class="editor-body" [(ngModel)]="content" name="content" rows="10" placeholder="Take a note..." aria-label="Note content"></textarea>
+
+  <textarea *ngIf="type === 'text'" matInput class="editor-body" [(ngModel)]="content" name="content" rows="10" placeholder="Take a note..." aria-label="Note content"></textarea>
+
+  <div class="editor-checklist" *ngIf="type === 'checklist'">
+    <div class="editor-checklist-row" *ngFor="let item of checklistItems; let i = index">
+      <mat-checkbox [(ngModel)]="item.checked" [name]="'item-check-' + i" color="primary" aria-label="Mark checklist item complete"></mat-checkbox>
+      <input matInput [(ngModel)]="item.text" [name]="'item-text-' + i" [class.item-checked]="item.checked" placeholder="List item">
+      <button mat-icon-button type="button" (click)="removeChecklistItem(item.id)" matTooltip="Remove item" aria-label="Remove checklist item">
+        <mat-icon>close</mat-icon>
+      </button>
+    </div>
+    <button mat-button type="button" class="add-checklist-item" (click)="addChecklistItem()">
+      <mat-icon>add</mat-icon> Add item
+    </button>
+  </div>
 
   <mat-form-field appearance="outline" class="tags-field">
     <mat-label>Labels</mat-label>
@@ -40,5 +63,5 @@
 
 <mat-dialog-actions align="end">
   <button mat-button mat-dialog-close>Cancel</button>
-  <button mat-flat-button color="primary" (click)="save()" [disabled]="!title.trim() && !content.trim()">Save</button>
+  <button mat-flat-button color="primary" (click)="save()" [disabled]="!title.trim() && !content.trim() && !hasChecklistText()">Save</button>
 </mat-dialog-actions>

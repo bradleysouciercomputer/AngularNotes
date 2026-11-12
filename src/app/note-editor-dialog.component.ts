@@ -15,6 +15,8 @@ export interface Note {
   content: string;
   tags: string[];
   color: string;
+  type: 'text' | 'checklist';
+  checklistItems: { id: string; text: string; checked: boolean }[];
   pinned: boolean;
   favorite: boolean;
   archived: boolean;
@@ -23,7 +25,7 @@ export interface Note {
   updatedAt: number;
 }
 
-export type NoteDraft = Pick<Note, 'title' | 'content' | 'tags' | 'color' | 'pinned' | 'favorite'>;
+export type NoteDraft = Pick<Note, 'title' | 'content' | 'tags' | 'color' | 'type' | 'checklistItems' | 'pinned' | 'favorite'>;
 
 @Component({
   selector: 'app-note-editor-dialog',
@@ -53,8 +55,28 @@ export class NoteEditorDialogComponent {
   content = this.data.content;
   tagsText = this.data.tags.join(', ');
   color = this.data.color || '#ffffff';
+  type: 'text' | 'checklist' = this.data.type || 'text';
+  checklistItems = (this.data.checklistItems || []).map((item) => ({ ...item }));
   pinned = this.data.pinned;
   favorite = this.data.favorite;
+
+  addChecklistItem(): void {
+    this.checklistItems = [...this.checklistItems, {
+      id: typeof crypto !== 'undefined' && 'randomUUID' in crypto
+        ? crypto.randomUUID()
+        : 'item-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 7),
+      text: '',
+      checked: false
+    }];
+  }
+
+  removeChecklistItem(id: string): void {
+    this.checklistItems = this.checklistItems.filter((item) => item.id !== id);
+  }
+
+  hasChecklistText(): boolean {
+    return this.checklistItems.some((item) => item.text.trim().length > 0);
+  }
 
   save(): void {
     const tags = [...new Set(this.tagsText.split(',').map((tag) => tag.trim()).filter(Boolean))];
@@ -63,6 +85,8 @@ export class NoteEditorDialogComponent {
       content: this.content,
       tags,
       color: this.color,
+      type: this.type,
+      checklistItems: this.checklistItems.filter((item) => item.text.trim()).map((item) => ({ ...item, text: item.text.trim() })),
       pinned: this.pinned,
       favorite: this.favorite
     });

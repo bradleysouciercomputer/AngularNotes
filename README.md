@@ -4,7 +4,7 @@ AngularNotes is a clean, responsive note-taking app built with **Angular 22** an
 
 ## Features
 
-- Create and edit notes with a title, multiline note editor, and comma-separated tags
+- Create and edit text notes or interactive checklists with a title and comma-separated labels
 - Search note titles, note content, and tags
 - Pin important notes and add notes to Favorites
 - Organize notes into Recent, Archive, and Trash views
@@ -12,6 +12,8 @@ AngularNotes is a clean, responsive note-taking app built with **Angular 22** an
 - Sort by last updated, date created, or title
 - Switch between grid and list layouts
 - Choose from a set of soft note colors
+- Check off checklist items directly from the notes grid
+- Duplicate notes or copy note text to the clipboard
 - Import and export notes as JSON backups
 - Responsive layout for desktop, tablet, and mobile
 - Browser-local autosave

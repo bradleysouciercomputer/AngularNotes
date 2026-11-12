@@ -71,14 +71,14 @@
     </mat-toolbar>
 
     <main class="workspace">
-      <button mat-button class="quick-note" (click)="createNote()">
-        <span>Take a note...</span>
-        <span class="quick-note-actions">
+      <div class="quick-note-shell">
+        <button mat-button class="quick-note" (click)="createNote()">
+          <span>Take a note...</span>
+        </button>
+        <button mat-icon-button class="quick-checklist" (click)="createChecklist()" matTooltip="New checklist" aria-label="Create a checklist">
           <mat-icon>check_box</mat-icon>
-          <mat-icon>brush</mat-icon>
-          <mat-icon>image</mat-icon>
-        </span>
-      </button>
+        </button>
+      </div>
 
       <section class="notes-toolbar">
         <div class="notes-heading">
@@ -119,6 +119,8 @@
             </button>
             <mat-menu #noteMenu="matMenu">
               <button mat-menu-item *ngIf="!note.trashed" (click)="editNote(note)"><mat-icon>edit</mat-icon><span>Edit note</span></button>
+              <button mat-menu-item *ngIf="!note.trashed" (click)="copyNote(note)"><mat-icon>content_copy</mat-icon><span>Copy note text</span></button>
+              <button mat-menu-item *ngIf="!note.trashed" (click)="duplicateNote(note)"><mat-icon>file_copy</mat-icon><span>Make a copy</span></button>
               <button mat-menu-item *ngIf="!note.trashed" (click)="togglePinned(note)"><mat-icon>{{ note.pinned ? 'keep_off' : 'push_pin' }}</mat-icon><span>{{ note.pinned ? 'Unpin note' : 'Pin note' }}</span></button>
               <button mat-menu-item *ngIf="!note.trashed" (click)="toggleArchive(note)"><mat-icon>{{ note.archived ? 'unarchive' : 'archive' }}</mat-icon><span>{{ note.archived ? 'Remove from archive' : 'Archive' }}</span></button>
               <button mat-menu-item *ngIf="note.trashed" (click)="restoreNote(note)"><mat-icon>restore_from_trash</mat-icon><span>Restore</span></button>
@@ -129,8 +131,22 @@
 
           <button mat-button class="note-body" (click)="editNote(note)">
             <span class="note-title">{{ note.title || 'Untitled note' }}</span>
-            <span class="note-text">{{ note.content || 'This note is empty.' }}</span>
+            <span class="note-text" *ngIf="note.content">{{ note.content }}</span>
+            <span class="note-text" *ngIf="!note.content && note.type !== 'checklist'">This note is empty.</span>
           </button>
+
+          <div class="checklist-preview" *ngIf="note.type === 'checklist' && note.checklistItems.length > 0">
+            <mat-checkbox
+              *ngFor="let item of note.checklistItems; trackBy: trackByChecklistItem"
+              [checked]="item.checked"
+              (click)="$event.stopPropagation()"
+              (change)="toggleChecklistItem(note, item.id, $event.checked)">
+              <span [class.checklist-complete]="item.checked">{{ item.text }}</span>
+            </mat-checkbox>
+            <span class="checklist-progress">
+              {{ completedChecklistCount(note) }} of {{ note.checklistItems.length }} completed
+            </span>
+          </div>
 
           <div class="note-tags" *ngIf="note.tags.length > 0">
             <mat-chip-set aria-label="Note tags">
