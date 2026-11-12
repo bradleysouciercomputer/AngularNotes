@@ -1,6 +1,6 @@
 # AngularNotes
 
-AngularNotes is a clean, responsive note-taking app built with **Angular 22** and the official **Angular Material** component library.
+AngularNotes is a clean, responsive note-taking app built with **Angular 22** and the official **Angular Material** component library. Its interface follows Google's Material 3 design language, with a familiar notes workspace, Roboto typography, soft surfaces, and note colors.
 
 ## Features
 
@@ -11,6 +11,7 @@ AngularNotes is a clean, responsive note-taking app built with **Angular 22** an
 - Restore notes from Trash or permanently delete them
 - Sort by last updated, date created, or title
 - Switch between grid and list layouts
+- Choose from a set of soft note colors
 - Import and export notes as JSON backups
 - Responsive layout for desktop, tablet, and mobile
 - Browser-local autosave

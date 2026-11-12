@@ -33,14 +33,14 @@ function starterNotes(): Note[] {
     {
       id: 'starter-welcome',
       title: 'A little space for big ideas',
-      content: 'Welcome to AngularNotes! This is your space to capture thoughts, keep track of plans, and collect the little things you do not want to forget.\\n\\nSelect this note to edit it, or create a fresh note whenever inspiration strikes.',
+      content: 'Welcome to AngularNotes! This is your space to capture thoughts, keep track of plans, and collect the little things you do not want to forget.\n\nSelect this note to edit it, or create a fresh note whenever inspiration strikes.',
       tags: ['Getting started', 'Ideas'], color: '#fef7d1', pinned: true, favorite: true,
       archived: false, trashed: false, createdAt: now - 1000 * 60 * 60 * 3, updatedAt: now - 1000 * 60 * 60 * 3
     },
     {
       id: 'starter-weekly',
       title: 'A calmer weekly reset',
-      content: '1. Clear the desk and close old tabs\\n2. Write down the three most important things\\n3. Make room for a proper break\\n4. Celebrate what moved forward',
+      content: '1. Clear the desk and close old tabs\n2. Write down the three most important things\n3. Make room for a proper break\n4. Celebrate what moved forward',
       tags: ['Personal', 'Planning'], color: '#e6f4ea', pinned: false, favorite: false,
       archived: false, trashed: false, createdAt: now - 1000 * 60 * 60 * 26, updatedAt: now - 1000 * 60 * 60 * 26
     },
