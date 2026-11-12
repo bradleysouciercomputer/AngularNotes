@@ -272,3 +272,141 @@
   .sort-field { width: 125px; }
   .notes-controls { gap: 2px; }
 }
+
+/* Navigation and note-card layout corrections */
+.primary-navigation .mat-mdc-list-item,
+.primary-navigation button[mat-list-item] {
+  border: 0 !important;
+  outline: 0;
+  box-shadow: none !important;
+  -webkit-tap-highlight-color: transparent;
+}
+.primary-navigation .mat-mdc-list-item::before,
+.primary-navigation .mat-mdc-list-item::after,
+.primary-navigation button[mat-list-item]::before,
+.primary-navigation button[mat-list-item]::after {
+  border: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+}
+.primary-navigation .mat-mdc-list-item:not(:focus-visible),
+.primary-navigation button[mat-list-item]:not(:focus-visible) {
+  outline: 0 !important;
+}
+.primary-navigation .mat-mdc-list-item:focus-visible,
+.primary-navigation button[mat-list-item]:focus-visible {
+  outline: 2px solid #1a73e8 !important;
+  outline-offset: -2px;
+}
+
+/* Keep the action row separate from the note text so cards grow with their content. */
+.note-card {
+  display: flex;
+  flex-direction: column;
+  align-self: start;
+  height: auto;
+  overflow: visible;
+}
+.note-card-top {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex: 0 0 40px;
+  align-items: center;
+  width: 100%;
+  min-height: 40px;
+  gap: 2px;
+}
+.note-body {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex: 0 0 auto;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: flex-start;
+  width: 100%;
+  height: auto;
+  min-height: 0;
+  overflow: visible;
+  padding: 7px 5px 10px;
+  margin: 0;
+  line-height: 1.5;
+}
+.note-title {
+  flex: 0 0 auto;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.note-text {
+  display: block;
+  flex: 0 0 auto;
+  max-height: none;
+  overflow: visible;
+  -webkit-line-clamp: unset;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+.note-tags,
+.note-footer {
+  position: relative;
+  z-index: 1;
+  flex: 0 0 auto;
+}
+.list-mode .note-body {
+  min-height: 0;
+}
+.list-mode .note-text {
+  display: -webkit-box;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  white-space: pre-line;
+}
+
+/* Give the Material icon buttons a true, centered circular hit target and ripple. */
+.card-action.mat-mdc-icon-button {
+  display: inline-flex !important;
+  flex: 0 0 40px;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 40px !important;
+  min-width: 40px !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  line-height: 40px !important;
+  text-align: center;
+  vertical-align: middle;
+  box-sizing: border-box;
+  transform: none !important;
+}
+.card-action.mat-mdc-icon-button .mat-mdc-button-touch-target {
+  top: 50%;
+  left: 50%;
+  width: 40px;
+  height: 40px;
+  transform: translate(-50%, -50%);
+}
+.card-action.mat-mdc-icon-button .mat-mdc-button-persistent-ripple,
+.card-action.mat-mdc-icon-button .mdc-icon-button__ripple {
+  inset: 0;
+  border-radius: 50%;
+}
+.card-action.mat-mdc-icon-button mat-icon {
+  display: block;
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  margin: 0 !important;
+  padding: 0;
+  font-size: 20px;
+  line-height: 20px;
+  text-align: center;
+}
+@media (max-width: 700px) {
+  .card-action.mat-mdc-icon-button { opacity: 1; }
+}
