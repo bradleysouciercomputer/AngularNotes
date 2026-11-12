@@ -74,11 +74,11 @@ function readStoredNotes(): Note[] {
       color: typeof item.color === 'string' && NOTE_COLORS.includes(item.color) ? item.color : '#ffffff',
       type: item.type === 'checklist' ? 'checklist' : 'text',
       checklistItems: Array.isArray(item.checklistItems) ? item.checklistItems
-        .filter((entry): entry is Record<string, unknown> => typeof entry === 'object' && entry !== null && typeof entry['text'] === 'string')
+        .filter((entry) => typeof entry.text === 'string')
         .map((entry, index) => ({
-          id: typeof entry['id'] === 'string' ? entry['id'] : 'item-' + index,
-          text: String(entry['text']),
-          checked: Boolean(entry['checked'])
+          id: typeof entry.id === 'string' ? entry.id : 'item-' + index,
+          text: entry.text,
+          checked: Boolean(entry.checked)
         })) : [],
       pinned: Boolean(item.pinned),
       favorite: Boolean(item.favorite),
