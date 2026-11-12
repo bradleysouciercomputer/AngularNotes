@@ -1,3 +1,4 @@
+import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -12,6 +13,7 @@ export interface Note {
   title: string;
   content: string;
   tags: string[];
+  color: string;
   pinned: boolean;
   favorite: boolean;
   archived: boolean;
@@ -20,12 +22,12 @@ export interface Note {
   updatedAt: number;
 }
 
-export type NoteDraft = Pick<Note, 'title' | 'content' | 'tags' | 'pinned' | 'favorite'>;
+export type NoteDraft = Pick<Note, 'title' | 'content' | 'tags' | 'color' | 'pinned' | 'favorite'>;
 
 @Component({
   selector: 'app-note-editor-dialog',
   standalone: true,
-  imports: [FormsModule, MatButtonModule, MatCheckboxModule, MatDialogModule, MatFormFieldModule, MatIconModule, MatInputModule],
+  imports: [CommonModule, FormsModule, MatButtonModule, MatCheckboxModule, MatDialogModule, MatFormFieldModule, MatIconModule, MatInputModule],
   templateUrl: './note-editor-dialog.component.html',
   styleUrl: './note-editor-dialog.component.css'
 })
@@ -33,9 +35,23 @@ export class NoteEditorDialogComponent {
   readonly data = inject<Note>(MAT_DIALOG_DATA);
   private readonly dialogRef = inject<MatDialogRef<NoteEditorDialogComponent, NoteDraft>>(MatDialogRef);
 
+  readonly colorOptions = [
+    { label: 'Default', value: '#ffffff' },
+    { label: 'Red', value: '#fce8e6' },
+    { label: 'Orange', value: '#fef1e1' },
+    { label: 'Yellow', value: '#fef7d1' },
+    { label: 'Green', value: '#e6f4ea' },
+    { label: 'Teal', value: '#e4f7f5' },
+    { label: 'Blue', value: '#e8f0fe' },
+    { label: 'Purple', value: '#f3e8fd' },
+    { label: 'Pink', value: '#fce8f3' },
+    { label: 'Gray', value: '#f1f3f4' }
+  ];
+
   title = this.data.title;
   content = this.data.content;
   tagsText = this.data.tags.join(', ');
+  color = this.data.color || '#ffffff';
   pinned = this.data.pinned;
   favorite = this.data.favorite;
 
@@ -45,6 +61,7 @@ export class NoteEditorDialogComponent {
       title: this.title,
       content: this.content,
       tags,
+      color: this.color,
       pinned: this.pinned,
       favorite: this.favorite
     });

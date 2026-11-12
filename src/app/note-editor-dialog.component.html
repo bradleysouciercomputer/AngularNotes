@@ -1,39 +1,44 @@
 <div class="editor-heading">
-  <div>
-    <div class="editor-eyebrow">{{ data.title ? 'YOUR NOTE' : 'NEW NOTE' }}</div>
-    <h2 mat-dialog-title>{{ data.title ? 'Edit note' : 'Create a note' }}</h2>
-  </div>
+  <h2 mat-dialog-title>{{ data.title ? 'Edit note' : 'New note' }}</h2>
   <button mat-icon-button mat-dialog-close aria-label="Close editor">
     <mat-icon>close</mat-icon>
   </button>
 </div>
+
 <mat-dialog-content class="editor-content">
-  <mat-form-field appearance="outline" class="editor-field title-field">
-    <mat-label>Title</mat-label>
-    <input matInput [(ngModel)]="title" name="title" maxlength="120" placeholder="Give your note a title">
-  </mat-form-field>
-  <mat-form-field appearance="outline" class="editor-field content-field">
-    <mat-label>Start writing</mat-label>
-    <textarea matInput [(ngModel)]="content" name="content" rows="12" placeholder="Capture a thought, make a plan, or jot something down..."></textarea>
-  </mat-form-field>
-  <mat-form-field appearance="outline" class="editor-field">
-    <mat-label>Tags</mat-label>
+  <input matInput class="editor-title" [(ngModel)]="title" name="title" maxlength="120" placeholder="Title" aria-label="Note title">
+  <textarea matInput class="editor-body" [(ngModel)]="content" name="content" rows="10" placeholder="Take a note..." aria-label="Note content"></textarea>
+
+  <mat-form-field appearance="outline" class="tags-field">
+    <mat-label>Labels</mat-label>
     <input matInput [(ngModel)]="tagsText" name="tags" placeholder="Work, Ideas, Personal">
-    <mat-hint>Separate tags with commas.</mat-hint>
+    <mat-hint>Separate labels with commas.</mat-hint>
   </mat-form-field>
+
+  <div class="color-section">
+    <span class="color-label">Note color</span>
+    <div class="color-options">
+      <button
+        *ngFor="let option of colorOptions"
+        mat-icon-button
+        class="color-option"
+        [class.color-selected]="color === option.value"
+        [style.background-color]="option.value"
+        [attr.aria-label]="option.label + ' note color'"
+        [matTooltip]="option.label"
+        (click)="color = option.value">
+        <mat-icon *ngIf="color === option.value">check</mat-icon>
+      </button>
+    </div>
+  </div>
+
   <div class="editor-options">
-    <mat-checkbox [(ngModel)]="pinned" name="pinned" color="primary">
-      <span class="check-label"><mat-icon>push_pin</mat-icon> Pin this note</span>
-    </mat-checkbox>
-    <mat-checkbox [(ngModel)]="favorite" name="favorite" color="primary">
-      <span class="check-label"><mat-icon>favorite</mat-icon> Add to favorites</span>
-    </mat-checkbox>
+    <mat-checkbox [(ngModel)]="pinned" name="pinned" color="primary">Pin note</mat-checkbox>
+    <mat-checkbox [(ngModel)]="favorite" name="favorite" color="primary">Add to favorites</mat-checkbox>
   </div>
 </mat-dialog-content>
+
 <mat-dialog-actions align="end">
   <button mat-button mat-dialog-close>Cancel</button>
-  <button mat-flat-button color="primary" (click)="save()" [disabled]="!title.trim() && !content.trim()">
-    <mat-icon>check</mat-icon>
-    Save note
-  </button>
+  <button mat-flat-button color="primary" (click)="save()" [disabled]="!title.trim() && !content.trim()">Save</button>
 </mat-dialog-actions>

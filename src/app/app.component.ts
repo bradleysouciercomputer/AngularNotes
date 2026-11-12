@@ -1,4 +1,4 @@
-import { CommonModule } from '@angular/common';
+import { CommonModule, DatePipe } from '@angular/common';
 import { Component, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -22,6 +22,10 @@ export type NoteView = 'all' | 'recent' | 'favorites' | 'pinned' | 'archive' | '
 export type SortMode = 'updated' | 'created' | 'title';
 
 const STORAGE_KEY = 'angularnotes.notes.v1';
+const NOTE_COLORS = [
+  '#ffffff', '#fce8e6', '#fef1e1', '#fef7d1', '#e6f4ea',
+  '#e4f7f5', '#e8f0fe', '#f3e8fd', '#fce8f3', '#f1f3f4'
+];
 
 function starterNotes(): Note[] {
   const now = Date.now();
@@ -29,23 +33,23 @@ function starterNotes(): Note[] {
     {
       id: 'starter-welcome',
       title: 'A little space for big ideas',
-      content: 'Welcome to AngularNotes! This is your space to capture thoughts, keep track of plans, and collect the little things you do not want to forget.\n\nSelect this note to edit it, or create a fresh note whenever inspiration strikes.',
-      tags: ['Getting started', 'Ideas'], pinned: true, favorite: true, archived: false, trashed: false,
-      createdAt: now - 1000 * 60 * 60 * 3, updatedAt: now - 1000 * 60 * 60 * 3
+      content: 'Welcome to AngularNotes! This is your space to capture thoughts, keep track of plans, and collect the little things you do not want to forget.\\n\\nSelect this note to edit it, or create a fresh note whenever inspiration strikes.',
+      tags: ['Getting started', 'Ideas'], color: '#fef7d1', pinned: true, favorite: true,
+      archived: false, trashed: false, createdAt: now - 1000 * 60 * 60 * 3, updatedAt: now - 1000 * 60 * 60 * 3
     },
     {
       id: 'starter-weekly',
       title: 'A calmer weekly reset',
-      content: '1. Clear the desk and close old tabs\n2. Write down the three most important things\n3. Make room for a proper break\n4. Celebrate what moved forward',
-      tags: ['Personal', 'Planning'], pinned: false, favorite: false, archived: false, trashed: false,
-      createdAt: now - 1000 * 60 * 60 * 26, updatedAt: now - 1000 * 60 * 60 * 26
+      content: '1. Clear the desk and close old tabs\\n2. Write down the three most important things\\n3. Make room for a proper break\\n4. Celebrate what moved forward',
+      tags: ['Personal', 'Planning'], color: '#e6f4ea', pinned: false, favorite: false,
+      archived: false, trashed: false, createdAt: now - 1000 * 60 * 60 * 26, updatedAt: now - 1000 * 60 * 60 * 26
     },
     {
       id: 'starter-reading',
       title: 'Things worth exploring',
       content: 'A running list of ideas, references, and topics to come back to. Add links, snippets, or questions here as you discover them.',
-      tags: ['Reference'], pinned: false, favorite: false, archived: false, trashed: false,
-      createdAt: now - 1000 * 60 * 60 * 52, updatedAt: now - 1000 * 60 * 60 * 52
+      tags: ['Reference'], color: '#e8f0fe', pinned: false, favorite: false,
+      archived: false, trashed: false, createdAt: now - 1000 * 60 * 60 * 52, updatedAt: now - 1000 * 60 * 60 * 52
     }
   ];
 }
@@ -62,11 +66,17 @@ function readStoredNotes(): Note[] {
       typeof (item as Note).title === 'string' &&
       typeof (item as Note).content === 'string'
     ).map((item) => ({
-      id: item.id, title: item.title, content: item.content,
+      id: item.id,
+      title: item.title,
+      content: item.content,
       tags: Array.isArray(item.tags) ? item.tags.filter((tag): tag is string => typeof tag === 'string') : [],
-      pinned: Boolean(item.pinned), favorite: Boolean(item.favorite),
-      archived: Boolean(item.archived), trashed: Boolean(item.trashed),
-      createdAt: Number(item.createdAt) || Date.now(), updatedAt: Number(item.updatedAt) || Date.now()
+      color: typeof item.color === 'string' && NOTE_COLORS.includes(item.color) ? item.color : '#ffffff',
+      pinned: Boolean(item.pinned),
+      favorite: Boolean(item.favorite),
+      archived: Boolean(item.archived),
+      trashed: Boolean(item.trashed),
+      createdAt: Number(item.createdAt) || Date.now(),
+      updatedAt: Number(item.updatedAt) || Date.now()
     }));
   } catch {
     return starterNotes();
@@ -77,7 +87,7 @@ function readStoredNotes(): Note[] {
   selector: 'app-root',
   standalone: true,
   imports: [
-    CommonModule, FormsModule, MatButtonModule, MatCardModule, MatChipsModule,
+    CommonModule, DatePipe, FormsModule, MatButtonModule, MatCardModule, MatChipsModule,
     MatDialogModule, MatDividerModule, MatFormFieldModule, MatIconModule, MatInputModule,
     MatListModule, MatMenuModule, MatSelectModule, MatSidenavModule, MatSnackBarModule,
     MatToolbarModule, MatTooltipModule
@@ -96,8 +106,8 @@ export class AppComponent {
   readonly notes = signal<Note[]>(readStoredNotes());
 
   readonly viewTitle = computed(() => ({
-    all: 'All notes', recent: 'Recently updated', favorites: 'Favorites',
-    pinned: 'Pinned notes', archive: 'Archive', trash: 'Trash'
+    all: 'Notes', recent: 'Recent', favorites: 'Favorites',
+    pinned: 'Pinned', archive: 'Archive', trash: 'Trash'
   })[this.activeView()]);
 
   readonly visibleNotes = computed(() => {
@@ -153,8 +163,9 @@ export class AppComponent {
       ? crypto.randomUUID()
       : 'note-' + now.toString(36) + '-' + Math.random().toString(36).slice(2, 8);
     this.openEditor({
-      id, title: '', content: '', tags: [], pinned: false, favorite: false,
-      archived: false, trashed: false, createdAt: now, updatedAt: now
+      id, title: '', content: '', tags: [], color: '#ffffff',
+      pinned: false, favorite: false, archived: false, trashed: false,
+      createdAt: now, updatedAt: now
     });
   }
 
@@ -166,7 +177,7 @@ export class AppComponent {
     const ref = this.dialog.open<NoteEditorDialogComponent, Note, NoteDraft>(
       NoteEditorDialogComponent,
       {
-        data: note, width: '640px', maxWidth: 'calc(100vw - 28px)',
+        data: note, width: '560px', maxWidth: 'calc(100vw - 28px)',
         autoFocus: 'first-tabbable', restoreFocus: true, panelClass: 'angularnotes-editor-panel'
       }
     );
@@ -243,10 +254,14 @@ export class AppComponent {
         typeof item['title'] === 'string' && typeof item['content'] === 'string'
       ).map((item, index) => ({
         id: 'import-' + Date.now().toString(36) + '-' + index,
-        title: String(item['title']), content: String(item['content']),
+        title: String(item['title']),
+        content: String(item['content']),
         tags: Array.isArray(item['tags']) ? item['tags'].filter((tag): tag is string => typeof tag === 'string') : [],
-        pinned: Boolean(item['pinned']), favorite: Boolean(item['favorite']),
-        archived: Boolean(item['archived']), trashed: false,
+        color: typeof item['color'] === 'string' && NOTE_COLORS.includes(item['color']) ? item['color'] : '#ffffff',
+        pinned: Boolean(item['pinned']),
+        favorite: Boolean(item['favorite']),
+        archived: Boolean(item['archived']),
+        trashed: false,
         createdAt: Number(item['createdAt']) || Date.now(),
         updatedAt: Number(item['updatedAt']) || Date.now()
       }));

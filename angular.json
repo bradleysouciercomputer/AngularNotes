@@ -15,8 +15,8 @@
             "browser": "src/main.ts",
             "index": "src/index.html",
             "tsConfig": "tsconfig.app.json",
-            "inlineStyleLanguage": "css",
-            "styles": ["src/styles.css"],
+            "inlineStyleLanguage": "scss",
+            "styles": ["src/styles.scss"],
             "assets": []
           },
           "configurations": {
