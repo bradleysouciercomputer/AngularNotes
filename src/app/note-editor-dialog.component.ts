@@ -7,6 +7,7 @@ import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/materia
 import { MatFormFieldModule } from '@angular/material/form-field';
 import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
+import { MatTooltipModule } from '@angular/material/tooltip';
 
 export interface Note {
   id: string;
@@ -27,7 +28,7 @@ export type NoteDraft = Pick<Note, 'title' | 'content' | 'tags' | 'color' | 'pin
 @Component({
   selector: 'app-note-editor-dialog',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatButtonModule, MatCheckboxModule, MatDialogModule, MatFormFieldModule, MatIconModule, MatInputModule],
+  imports: [CommonModule, FormsModule, MatButtonModule, MatCheckboxModule, MatDialogModule, MatFormFieldModule, MatIconModule, MatInputModule, MatTooltipModule],
   templateUrl: './note-editor-dialog.component.html',
   styleUrl: './note-editor-dialog.component.css'
 })
