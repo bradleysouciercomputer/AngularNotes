@@ -1,0 +1,18 @@
+.editor-heading { display: flex; justify-content: space-between; align-items: flex-start; padding: 23px 25px 4px; }
+.editor-heading h2 { margin: 3px 0 0; padding: 0; color: #29334a; font: 800 21px 'Manrope', sans-serif; letter-spacing: -.5px; }
+.editor-eyebrow { color: #8c9abd; font-size: 9px; font-weight: 700; letter-spacing: 1.3px; }
+.editor-content { display: flex; flex-direction: column; gap: 9px; padding: 15px 25px 5px !important; }
+.editor-field { width: 100%; }
+.title-field input { font: 700 16px 'Manrope', sans-serif; }
+.content-field textarea { min-height: 215px; line-height: 1.7; resize: vertical; }
+.editor-options { display: flex; flex-wrap: wrap; gap: 20px; padding: 5px 1px 10px; }
+.check-label { display: inline-flex; align-items: center; gap: 5px; color: #68748a; font-size: 11px; }
+.check-label mat-icon { font-size: 15px; width: 15px; height: 15px; }
+mat-dialog-actions { padding: 10px 25px 22px !important; gap: 7px; }
+mat-dialog-actions button { border-radius: 10px; }
+mat-dialog-actions button mat-icon { margin-right: 4px; }
+@media (max-width: 480px) {
+  .editor-heading { padding: 18px 16px 4px; }
+  .editor-content { padding-left: 16px !important; padding-right: 16px !important; }
+  mat-dialog-actions { padding: 8px 16px 16px !important; }
+}

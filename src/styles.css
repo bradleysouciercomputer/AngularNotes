@@ -1,0 +1,25 @@
+@import '@angular/material/prebuilt-themes/azure-blue.css';
+
+:root {
+  color-scheme: light;
+  --page-bg: #f6f7fb;
+  --surface: #ffffff;
+  --surface-soft: #f8f9fc;
+  --ink: #202536;
+  --muted: #7b8497;
+  --line: #e8ebf2;
+  --accent: #3768d8;
+  --accent-soft: #edf2ff;
+  --shadow-soft: 0 12px 34px rgba(34, 48, 82, .055);
+  font-family: 'DM Sans', Roboto, sans-serif;
+  font-synthesis: none;
+}
+* { box-sizing: border-box; }
+html, body { min-height: 100%; margin: 0; }
+body { min-width: 320px; background: var(--page-bg); color: var(--ink); font-family: 'DM Sans', Roboto, sans-serif; }
+button, input, textarea { font: inherit; }
+.mat-mdc-form-field { font-family: 'DM Sans', Roboto, sans-serif; }
+.mat-mdc-button, .mat-mdc-unelevated-button, .mat-mdc-outlined-button { letter-spacing: 0; font-weight: 600; }
+.mat-mdc-dialog-container .mdc-dialog__surface { border-radius: 24px !important; }
+.mat-mdc-snack-bar-container { --mdc-snackbar-container-shape: 14px; }
+:focus-visible { outline: 3px solid rgba(55, 104, 216, .32); outline-offset: 2px; }

@@ -1,0 +1,39 @@
+<div class="editor-heading">
+  <div>
+    <div class="editor-eyebrow">{{ data.title ? 'YOUR NOTE' : 'NEW NOTE' }}</div>
+    <h2 mat-dialog-title>{{ data.title ? 'Edit note' : 'Create a note' }}</h2>
+  </div>
+  <button mat-icon-button mat-dialog-close aria-label="Close editor">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+<mat-dialog-content class="editor-content">
+  <mat-form-field appearance="outline" class="editor-field title-field">
+    <mat-label>Title</mat-label>
+    <input matInput [(ngModel)]="title" name="title" maxlength="120" placeholder="Give your note a title">
+  </mat-form-field>
+  <mat-form-field appearance="outline" class="editor-field content-field">
+    <mat-label>Start writing</mat-label>
+    <textarea matInput [(ngModel)]="content" name="content" rows="12" placeholder="Capture a thought, make a plan, or jot something down..."></textarea>
+  </mat-form-field>
+  <mat-form-field appearance="outline" class="editor-field">
+    <mat-label>Tags</mat-label>
+    <input matInput [(ngModel)]="tagsText" name="tags" placeholder="Work, Ideas, Personal">
+    <mat-hint>Separate tags with commas.</mat-hint>
+  </mat-form-field>
+  <div class="editor-options">
+    <mat-checkbox [(ngModel)]="pinned" name="pinned" color="primary">
+      <span class="check-label"><mat-icon>push_pin</mat-icon> Pin this note</span>
+    </mat-checkbox>
+    <mat-checkbox [(ngModel)]="favorite" name="favorite" color="primary">
+      <span class="check-label"><mat-icon>favorite</mat-icon> Add to favorites</span>
+    </mat-checkbox>
+  </div>
+</mat-dialog-content>
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Cancel</button>
+  <button mat-flat-button color="primary" (click)="save()" [disabled]="!title.trim() && !content.trim()">
+    <mat-icon>check</mat-icon>
+    Save note
+  </button>
+</mat-dialog-actions>

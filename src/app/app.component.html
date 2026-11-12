@@ -1,0 +1,169 @@
+<mat-sidenav-container class="app-shell">
+  <mat-sidenav class="sidebar" mode="side" opened>
+    <div class="brand">
+      <div class="brand-mark"><mat-icon>edit_note</mat-icon></div>
+      <div class="brand-copy">
+        <span class="brand-name">AngularNotes</span>
+        <span class="brand-caption">A clear mind starts here</span>
+      </div>
+    </div>
+
+    <button mat-flat-button color="primary" class="create-button" (click)="createNote()">
+      <mat-icon>add</mat-icon><span>New note</span>
+    </button>
+
+    <div class="nav-section-label">YOUR SPACE</div>
+    <mat-nav-list class="primary-navigation">
+      <button mat-list-item (click)="setView('all')" [class.nav-selected]="activeView() === 'all'" matTooltip="All notes" matTooltipPosition="right">
+        <mat-icon matListItemIcon>description</mat-icon><span matListItemTitle>All notes</span><span matListItemMeta class="nav-count">{{ count('all') }}</span>
+      </button>
+      <button mat-list-item (click)="setView('recent')" [class.nav-selected]="activeView() === 'recent'" matTooltip="Recently updated" matTooltipPosition="right">
+        <mat-icon matListItemIcon>schedule</mat-icon><span matListItemTitle>Recent</span><span matListItemMeta class="nav-count">{{ count('recent') }}</span>
+      </button>
+      <button mat-list-item (click)="setView('favorites')" [class.nav-selected]="activeView() === 'favorites'" matTooltip="Favorites" matTooltipPosition="right">
+        <mat-icon matListItemIcon>favorite_border</mat-icon><span matListItemTitle>Favorites</span><span matListItemMeta class="nav-count">{{ count('favorites') }}</span>
+      </button>
+      <button mat-list-item (click)="setView('pinned')" [class.nav-selected]="activeView() === 'pinned'" matTooltip="Pinned notes" matTooltipPosition="right">
+        <mat-icon matListItemIcon>push_pin</mat-icon><span matListItemTitle>Pinned</span><span matListItemMeta class="nav-count">{{ count('pinned') }}</span>
+      </button>
+    </mat-nav-list>
+
+    <mat-divider></mat-divider>
+    <div class="nav-section-label organization-label">ORGANIZE</div>
+    <mat-nav-list class="primary-navigation">
+      <button mat-list-item (click)="setView('archive')" [class.nav-selected]="activeView() === 'archive'" matTooltip="Archive" matTooltipPosition="right">
+        <mat-icon matListItemIcon>inventory_2</mat-icon><span matListItemTitle>Archive</span><span matListItemMeta class="nav-count">{{ count('archive') }}</span>
+      </button>
+      <button mat-list-item (click)="setView('trash')" [class.nav-selected]="activeView() === 'trash'" matTooltip="Trash" matTooltipPosition="right">
+        <mat-icon matListItemIcon>delete_outline</mat-icon><span matListItemTitle>Trash</span><span matListItemMeta class="nav-count">{{ count('trash') }}</span>
+      </button>
+    </mat-nav-list>
+
+    <div class="sidebar-spacer"></div>
+    <button mat-button class="storage-note" (click)="showStorageInfo()">
+      <mat-icon>cloud_done</mat-icon>
+      <span><strong>Saved on this device</strong><small>Your notes stay in this browser</small></span>
+      <mat-icon class="storage-info-icon">info_outline</mat-icon>
+    </button>
+    <div class="sidebar-version">ANGULAR MATERIAL EDITION</div>
+  </mat-sidenav>
+
+  <mat-sidenav-content class="main-content">
+    <mat-toolbar class="topbar">
+      <div class="page-heading">
+        <span class="topbar-overline">YOUR PERSONAL WORKSPACE</span>
+        <h1>{{ viewTitle() }}</h1>
+      </div>
+      <span class="topbar-spacer"></span>
+      <mat-form-field appearance="outline" class="search-field" subscriptSizing="dynamic">
+        <mat-icon matPrefix>search</mat-icon>
+        <input matInput placeholder="Search your notes..." aria-label="Search notes" [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)">
+        <button *ngIf="searchTerm()" mat-icon-button matSuffix aria-label="Clear search" (click)="searchTerm.set('')"><mat-icon>close</mat-icon></button>
+      </mat-form-field>
+      <button mat-icon-button class="topbar-icon-button" [matMenuTriggerFor]="appMenu" matTooltip="More options" aria-label="More options">
+        <mat-icon>more_vert</mat-icon>
+      </button>
+      <mat-menu #appMenu="matMenu">
+        <button mat-menu-item (click)="exportNotes()"><mat-icon>download</mat-icon><span>Export notes</span></button>
+        <button mat-menu-item (click)="importPicker.click()"><mat-icon>upload_file</mat-icon><span>Import backup</span></button>
+        <mat-divider></mat-divider>
+        <button mat-menu-item (click)="showStorageInfo()"><mat-icon>privacy_tip</mat-icon><span>Storage &amp; privacy</span></button>
+      </mat-menu>
+      <input #importPicker type="file" accept="application/json,.json" hidden (change)="importNotes($event)">
+    </mat-toolbar>
+
+    <main class="workspace">
+      <section class="intro-row">
+        <div class="intro-copy">
+          <div class="intro-kicker"><span class="sparkle-dot"></span> A LITTLE MORE ROOM TO THINK</div>
+          <h2>{{ activeView() === 'trash' ? 'A second chance for old notes.' : activeView() === 'archive' ? 'Out of sight, still close by.' : 'Your ideas, all in one place.' }}</h2>
+          <p>{{ activeView() === 'trash' ? 'Restore a note or clear out what you no longer need.' : activeView() === 'archive' ? 'Keep finished thoughts without losing them.' : 'Capture what matters. Find it whenever you need it.' }}</p>
+        </div>
+        <div class="intro-actions">
+          <button *ngIf="activeView() !== 'trash'" mat-flat-button color="primary" class="new-note-action" (click)="createNote()"><mat-icon>add</mat-icon>New note</button>
+          <button *ngIf="activeView() === 'trash' && count('trash') > 0" mat-stroked-button color="warn" (click)="emptyTrash()"><mat-icon>delete_sweep</mat-icon>Empty trash</button>
+        </div>
+      </section>
+
+      <section class="summary-strip" aria-label="Notes summary">
+        <div class="summary-item"><div class="summary-icon summary-blue"><mat-icon>description</mat-icon></div><div><strong>{{ count('all') }}</strong><span>Active notes</span></div></div>
+        <div class="summary-divider"></div>
+        <div class="summary-item"><div class="summary-icon summary-gold"><mat-icon>push_pin</mat-icon></div><div><strong>{{ count('pinned') }}</strong><span>Pinned</span></div></div>
+        <div class="summary-divider"></div>
+        <div class="summary-item"><div class="summary-icon summary-pink"><mat-icon>favorite</mat-icon></div><div><strong>{{ count('favorites') }}</strong><span>Favorites</span></div></div>
+        <div class="summary-hint"><mat-icon>auto_awesome</mat-icon> Make space for your next idea</div>
+      </section>
+
+      <section class="notes-toolbar">
+        <div class="notes-heading"><h3>{{ activeView() === 'all' ? 'Your collection' : viewTitle() }}</h3><span>{{ visibleNotes().length }} {{ visibleNotes().length === 1 ? 'note' : 'notes' }}</span></div>
+        <div class="notes-controls">
+          <mat-form-field appearance="outline" class="sort-field" subscriptSizing="dynamic">
+            <mat-icon matPrefix>sort</mat-icon>
+            <mat-select aria-label="Sort notes" [value]="sortMode()" (selectionChange)="sortMode.set($event.value)">
+              <mat-option value="updated">Last updated</mat-option><mat-option value="created">Date created</mat-option><mat-option value="title">Title A–Z</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <button mat-icon-button class="layout-toggle" (click)="toggleLayout()" [matTooltip]="layoutMode() === 'grid' ? 'Switch to list view' : 'Switch to grid view'" aria-label="Change note layout">
+            <mat-icon>{{ layoutMode() === 'grid' ? 'view_agenda' : 'grid_view' }}</mat-icon>
+          </button>
+        </div>
+      </section>
+
+      <section class="notes-grid" [class.list-mode]="layoutMode() === 'list'" *ngIf="visibleNotes().length > 0; else emptyState">
+        <mat-card class="note-card" appearance="outlined" *ngFor="let note of visibleNotes(); trackBy: trackById" (click)="editNote(note)" (keydown.enter)="editNote(note)" tabindex="0" role="button" [attr.aria-label]="'Edit note: ' + note.title">
+          <div class="note-card-top">
+            <div class="note-flags">
+              <span class="note-flag pinned-flag" *ngIf="note.pinned && !note.trashed"><mat-icon>push_pin</mat-icon>Pinned</span>
+              <span class="note-flag archived-flag" *ngIf="note.archived && !note.trashed"><mat-icon>inventory_2</mat-icon>Archived</span>
+            </div>
+            <div class="note-card-actions">
+              <button mat-icon-button class="card-action" *ngIf="!note.trashed" (click)="$event.stopPropagation(); toggleFavorite(note)" [matTooltip]="note.favorite ? 'Remove from favorites' : 'Add to favorites'" [attr.aria-label]="note.favorite ? 'Remove from favorites' : 'Add to favorites'">
+                <mat-icon [class.favorite-active]="note.favorite">{{ note.favorite ? 'favorite' : 'favorite_border' }}</mat-icon>
+              </button>
+              <button mat-icon-button class="card-action" [matMenuTriggerFor]="noteMenu" (click)="$event.stopPropagation()" aria-label="Note actions"><mat-icon>more_horiz</mat-icon></button>
+              <mat-menu #noteMenu="matMenu">
+                <button mat-menu-item *ngIf="!note.trashed" (click)="togglePinned(note)"><mat-icon>{{ note.pinned ? 'keep_off' : 'push_pin' }}</mat-icon><span>{{ note.pinned ? 'Unpin note' : 'Pin note' }}</span></button>
+                <button mat-menu-item *ngIf="!note.trashed" (click)="toggleArchive(note)"><mat-icon>{{ note.archived ? 'unarchive' : 'inventory_2' }}</mat-icon><span>{{ note.archived ? 'Remove from archive' : 'Archive note' }}</span></button>
+                <button mat-menu-item *ngIf="note.trashed" (click)="restoreNote(note)"><mat-icon>restore</mat-icon><span>Restore note</span></button>
+                <button mat-menu-item *ngIf="note.trashed" class="delete-menu-item" (click)="permanentlyDelete(note)"><mat-icon>delete_forever</mat-icon><span>Delete forever</span></button>
+                <button mat-menu-item *ngIf="!note.trashed" class="delete-menu-item" (click)="moveToTrash(note)"><mat-icon>delete_outline</mat-icon><span>Move to trash</span></button>
+              </mat-menu>
+            </div>
+          </div>
+          <mat-card-header class="note-header"><mat-card-title>{{ note.title || 'Untitled note' }}</mat-card-title></mat-card-header>
+          <mat-card-content class="note-content"><p>{{ note.content || 'This note is empty. Open it to add something.' }}</p></mat-card-content>
+          <div class="note-tags" *ngIf="note.tags.length > 0">
+            <mat-chip-set aria-label="Note tags"><mat-chip *ngFor="let tag of note.tags">{{ tag }}</mat-chip></mat-chip-set>
+          </div>
+          <mat-divider></mat-divider>
+          <mat-card-actions class="note-footer" *ngIf="!note.trashed">
+            <span class="note-date"><mat-icon>schedule</mat-icon>Edited {{ note.updatedAt | date:'MMM d' }}</span>
+            <button mat-icon-button class="footer-open" matTooltip="Open note" aria-label="Open note" (click)="$event.stopPropagation(); editNote(note)"><mat-icon>arrow_outward</mat-icon></button>
+          </mat-card-actions>
+          <mat-card-actions class="note-footer trash-footer" *ngIf="note.trashed">
+            <button mat-button color="primary" (click)="$event.stopPropagation(); restoreNote(note)"><mat-icon>restore</mat-icon>Restore</button>
+            <button mat-button color="warn" (click)="$event.stopPropagation(); permanentlyDelete(note)"><mat-icon>delete_forever</mat-icon>Delete forever</button>
+          </mat-card-actions>
+        </mat-card>
+      </section>
+
+      <ng-template #emptyState>
+        <section class="empty-state">
+          <div class="empty-illustration">
+            <div class="empty-paper"><mat-icon>{{ activeView() === 'trash' ? 'delete_outline' : activeView() === 'favorites' ? 'favorite_border' : 'edit_note' }}</mat-icon></div>
+            <span class="empty-spark empty-spark-one"></span><span class="empty-spark empty-spark-two"></span>
+          </div>
+          <h3>{{ searchTerm() ? 'No notes found' : activeView() === 'trash' ? 'Your trash is empty' : activeView() === 'favorites' ? 'No favorites yet' : activeView() === 'pinned' ? 'Nothing pinned yet' : activeView() === 'archive' ? 'Your archive is quiet' : 'A fresh page' }}</h3>
+          <p>{{ searchTerm() ? 'Try a different search or clear the search field.' : activeView() === 'trash' ? 'Notes you move to trash will show up here.' : activeView() === 'favorites' ? 'Tap the heart on a note to keep it close.' : activeView() === 'pinned' ? 'Pin important notes to find them quickly.' : activeView() === 'archive' ? 'Archive notes you want to keep but do not need every day.' : 'Create your first note and let the ideas flow.' }}</p>
+          <button *ngIf="!searchTerm() && activeView() !== 'trash' && activeView() !== 'archive' && activeView() !== 'favorites' && activeView() !== 'pinned'" mat-flat-button color="primary" (click)="createNote()"><mat-icon>add</mat-icon>Create a note</button>
+          <button *ngIf="searchTerm()" mat-stroked-button (click)="searchTerm.set('')">Clear search</button>
+        </section>
+      </ng-template>
+
+      <footer class="workspace-footer">
+        <span>Made for thoughts worth keeping.</span>
+        <button mat-button (click)="showStorageInfo()"><mat-icon>lock</mat-icon>Private to this browser</button>
+      </footer>
+    </main>
+  </mat-sidenav-content>
+</mat-sidenav-container>
