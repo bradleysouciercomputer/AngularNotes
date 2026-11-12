@@ -4,7 +4,7 @@ AngularNotes is a clean, responsive note-taking app built with **Angular 22** an
 
 ## Features
 
-- Create and edit notes with a title, rich-length text area, and comma-separated tags
+- Create and edit notes with a title, multiline note editor, and comma-separated tags
 - Search note titles, note content, and tags
 - Pin important notes and add notes to Favorites
 - Organize notes into Recent, Archive, and Trash views
@@ -19,20 +19,20 @@ AngularNotes is a clean, responsive note-taking app built with **Angular 22** an
 
 Angular 22 requires Node.js 22.22.3 or newer in the supported Node 22 line.
 
-\`\`\`bash
+```bash
 npm install
 npm start
-\`\`\`
+```
 
-Open the local URL printed by Angular CLI (normally \`http://localhost:4200\`).
+Open the local URL printed by Angular CLI (normally `http://localhost:4200`).
 
 ## Build for GitHub Pages
 
-\`\`\`bash
+```bash
 npm run build:pages
-\`\`\`
+```
 
-The GitHub Actions workflow in \`.github/workflows/deploy.yml\` builds the app with the \`/AngularNotes/\` base path and deploys \`dist/angular-notes/browser\` whenever changes are pushed to \`main\`.
+The GitHub Actions workflow in `.github/workflows/deploy.yml` builds the app with the `/AngularNotes/` base path and deploys `dist/angular-notes/browser` whenever changes are pushed to `main`.
 
 In the repository, open **Settings → Pages** and set **Build and deployment → Source** to **GitHub Actions**.
 
