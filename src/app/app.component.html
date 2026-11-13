@@ -17,6 +17,11 @@
         <mat-icon matListItemIcon>push_pin</mat-icon>
         <span matListItemTitle>Pinned</span>
       </button>
+      <button mat-list-item (click)="setView('reminders')" [class.nav-selected]="activeView() === 'reminders'" matTooltip="Reminders" matTooltipPosition="right">
+        <mat-icon matListItemIcon>notifications_active</mat-icon>
+        <span matListItemTitle>Reminders</span>
+        <span matListItemMeta class="nav-count" *ngIf="count('reminders') > 0">{{ count('reminders') }}</span>
+      </button>
     </mat-nav-list>
 
     <mat-divider class="sidebar-divider"></mat-divider>
@@ -95,7 +100,16 @@
         <button mat-icon-button class="quick-checklist" (click)="createChecklist()" matTooltip="New checklist" aria-label="Create a checklist">
           <mat-icon>check_box</mat-icon>
         </button>
+        <button mat-icon-button class="quick-templates" [matMenuTriggerFor]="templateMenu" matTooltip="Use a template" aria-label="Create note from a template">
+          <mat-icon>dashboard_customize</mat-icon>
+        </button>
       </div>
+      <mat-menu #templateMenu="matMenu">
+        <button mat-menu-item (click)="createFromTemplate('meeting')"><mat-icon>groups</mat-icon><span>Meeting notes</span></button>
+        <button mat-menu-item (click)="createFromTemplate('journal')"><mat-icon>auto_stories</mat-icon><span>Daily journal</span></button>
+        <button mat-menu-item (click)="createFromTemplate('project')"><mat-icon>view_kanban</mat-icon><span>Project plan</span></button>
+        <button mat-menu-item (click)="createFromTemplate('shopping')"><mat-icon>shopping_cart</mat-icon><span>Shopping list</span></button>
+      </mat-menu>
 
       <section class="notes-toolbar">
         <div class="notes-heading">
@@ -139,6 +153,7 @@
               <button mat-menu-item *ngIf="!note.trashed" (click)="copyNote(note)"><mat-icon>content_copy</mat-icon><span>Copy note text</span></button>
               <button mat-menu-item *ngIf="!note.trashed" (click)="duplicateNote(note)"><mat-icon>file_copy</mat-icon><span>Make a copy</span></button>
               <button mat-menu-item *ngIf="!note.trashed" (click)="downloadNoteMarkdown(note)"><mat-icon>download</mat-icon><span>Download as Markdown</span></button>
+              <button mat-menu-item *ngIf="!note.trashed && note.reminderDate" (click)="clearReminder(note)"><mat-icon>notifications_off</mat-icon><span>Remove reminder</span></button>
               <button mat-menu-item *ngIf="!note.trashed" (click)="togglePinned(note)"><mat-icon>{{ note.pinned ? 'keep_off' : 'push_pin' }}</mat-icon><span>{{ note.pinned ? 'Unpin note' : 'Pin note' }}</span></button>
               <button mat-menu-item *ngIf="!note.trashed" (click)="toggleArchive(note)"><mat-icon>{{ note.archived ? 'unarchive' : 'archive' }}</mat-icon><span>{{ note.archived ? 'Remove from archive' : 'Archive' }}</span></button>
               <button mat-menu-item *ngIf="note.trashed" (click)="restoreNote(note)"><mat-icon>restore_from_trash</mat-icon><span>Restore</span></button>
@@ -166,6 +181,15 @@
             </span>
           </div>
 
+          <div
+            class="note-reminder"
+            *ngIf="note.reminderDate && !note.trashed"
+            [class.reminder-overdue]="isReminderOverdue(note)"
+            [class.reminder-today]="isReminderToday(note)">
+            <mat-icon>notifications_active</mat-icon>
+            <span>{{ isReminderOverdue(note) ? 'Overdue · ' : isReminderToday(note) ? 'Today · ' : '' }}{{ note.reminderDate | date:'MMM d, y':'UTC' }}</span>
+          </div>
+
           <div class="note-tags" *ngIf="note.tags.length > 0">
             <mat-chip-set aria-label="Note tags">
               <mat-chip *ngFor="let tag of note.tags" (click)="filterByTag(tag); $event.stopPropagation()">{{ tag }}</mat-chip>
@@ -183,8 +207,8 @@
       <ng-template #emptyState>
         <section class="empty-state">
           <mat-icon class="empty-icon">{{ searchTerm() ? 'search_off' : activeView() === 'trash' ? 'delete_outline' : activeView() === 'favorites' ? 'favorite_border' : 'lightbulb' }}</mat-icon>
-          <h2>{{ searchTerm() ? 'No notes found' : activeView() === 'trash' ? 'Trash is empty' : activeView() === 'favorites' ? 'No favorites yet' : activeView() === 'pinned' ? 'No pinned notes' : activeView() === 'archive' ? 'Nothing in your archive' : 'Notes you add appear here' }}</h2>
-          <p>{{ searchTerm() ? 'Try another search term.' : activeView() === 'trash' ? 'Deleted notes will appear here.' : activeView() === 'favorites' ? 'Favorite a note to find it here.' : activeView() === 'pinned' ? 'Pin a note to keep it close.' : activeView() === 'archive' ? 'Archive notes you want to keep for later.' : 'Capture an idea, a list, or anything you want to remember.' }}</p>
+          <h2>{{ searchTerm() ? 'No notes found' : activeView() === 'trash' ? 'Trash is empty' : activeView() === 'favorites' ? 'No favorites yet' : activeView() === 'pinned' ? 'No pinned notes' : activeView() === 'reminders' ? 'No reminders set' : activeView() === 'archive' ? 'Nothing in your archive' : 'Notes you add appear here' }}</h2>
+          <p>{{ searchTerm() ? 'Try another search term.' : activeView() === 'trash' ? 'Deleted notes will appear here.' : activeView() === 'favorites' ? 'Favorite a note to find it here.' : activeView() === 'pinned' ? 'Pin a note to keep it close.' : activeView() === 'reminders' ? 'Add a reminder date to any note to see it here.' : activeView() === 'archive' ? 'Archive notes you want to keep for later.' : 'Capture an idea, a list, or anything you want to remember.' }}</p>
           <button *ngIf="!searchTerm() && activeView() === 'all'" mat-flat-button color="primary" (click)="createNote()">Create note</button>
           <button *ngIf="searchTerm()" mat-button (click)="searchTerm.set('')">Clear search</button>
         </section>
