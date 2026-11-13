@@ -27,6 +27,10 @@
         <mat-icon>close</mat-icon>
       </button>
     </div>
+    <div class="checklist-tools" *ngIf="hasCompletedChecklistItems()">
+      <button mat-button type="button" (click)="moveCompletedToBottom()">Move completed to bottom</button>
+      <button mat-button type="button" (click)="clearCompletedChecklistItems()">Clear completed</button>
+    </div>
     <button mat-button type="button" class="add-checklist-item" (click)="addChecklistItem()">
       <mat-icon>add</mat-icon> Add item
     </button>
