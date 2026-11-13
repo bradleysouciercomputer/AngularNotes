@@ -84,7 +84,7 @@ function readStoredNotes(): Note[] {
       favorite: Boolean(item.favorite),
       archived: Boolean(item.archived),
       trashed: Boolean(item.trashed),
-      reminderDate: typeof item.reminderDate === 'string' && /^\\d{4}-\\d{2}-\\d{2}$/.test(item.reminderDate) ? item.reminderDate : undefined,
+      reminderDate: typeof item.reminderDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(item.reminderDate) ? item.reminderDate : undefined,
       createdAt: Number(item.createdAt) || Date.now(),
       updatedAt: Number(item.updatedAt) || Date.now()
     }));
@@ -470,7 +470,7 @@ export class AppComponent {
         favorite: Boolean(item['favorite']),
         archived: Boolean(item['archived']),
         trashed: false,
-        reminderDate: typeof item['reminderDate'] === 'string' && /^\\d{4}-\\d{2}-\\d{2}$/.test(item['reminderDate']) ? item['reminderDate'] : undefined,
+        reminderDate: typeof item['reminderDate'] === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(item['reminderDate']) ? item['reminderDate'] : undefined,
         createdAt: Number(item['createdAt']) || Date.now(),
         updatedAt: Number(item['updatedAt']) || Date.now()
       }));
