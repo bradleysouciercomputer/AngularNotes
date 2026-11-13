@@ -78,6 +78,21 @@ export class NoteEditorDialogComponent {
     return this.checklistItems.some((item) => item.text.trim().length > 0);
   }
 
+  hasCompletedChecklistItems(): boolean {
+    return this.checklistItems.some((item) => item.checked);
+  }
+
+  moveCompletedToBottom(): void {
+    this.checklistItems = [
+      ...this.checklistItems.filter((item) => !item.checked),
+      ...this.checklistItems.filter((item) => item.checked)
+    ];
+  }
+
+  clearCompletedChecklistItems(): void {
+    this.checklistItems = this.checklistItems.filter((item) => !item.checked);
+  }
+
   save(): void {
     const tags = [...new Set(this.tagsText.split(',').map((tag) => tag.trim()).filter(Boolean))];
     this.dialogRef.close({
