@@ -33,6 +33,21 @@
       </button>
     </mat-nav-list>
 
+    <div class="sidebar-label" *ngIf="availableTags().length > 0">LABELS</div>
+    <mat-nav-list class="primary-navigation tag-navigation" *ngIf="availableTags().length > 0">
+      <button
+        mat-list-item
+        *ngFor="let tag of availableTags()"
+        (click)="filterByTag(tag)"
+        [class.nav-selected]="activeTag() === tag"
+        [matTooltip]="tag"
+        matTooltipPosition="right">
+        <mat-icon matListItemIcon>label_outline</mat-icon>
+        <span matListItemTitle>{{ tag }}</span>
+        <span matListItemMeta class="nav-count">{{ tagCount(tag) }}</span>
+      </button>
+    </mat-nav-list>
+
     <div class="sidebar-bottom">
       <button mat-button class="storage-note" (click)="showStorageInfo()">
         <mat-icon>cloud_done</mat-icon>
@@ -62,9 +77,11 @@
         <mat-icon>more_vert</mat-icon>
       </button>
       <mat-menu #appMenu="matMenu">
-        <button mat-menu-item (click)="exportNotes()"><mat-icon>download</mat-icon><span>Export notes</span></button>
+        <button mat-menu-item (click)="exportNotes()"><mat-icon>download</mat-icon><span>Export JSON backup</span></button>
+        <button mat-menu-item (click)="exportVisibleMarkdown()"><mat-icon>description</mat-icon><span>Export visible notes as Markdown</span></button>
         <button mat-menu-item (click)="importPicker.click()"><mat-icon>upload_file</mat-icon><span>Import backup</span></button>
         <mat-divider></mat-divider>
+        <button mat-menu-item (click)="showKeyboardShortcuts()"><mat-icon>keyboard</mat-icon><span>Keyboard shortcuts</span></button>
         <button mat-menu-item (click)="showStorageInfo()"><mat-icon>info</mat-icon><span>Storage &amp; privacy</span></button>
       </mat-menu>
       <input #importPicker type="file" accept="application/json,.json" hidden (change)="importNotes($event)">
@@ -121,6 +138,7 @@
               <button mat-menu-item *ngIf="!note.trashed" (click)="editNote(note)"><mat-icon>edit</mat-icon><span>Edit note</span></button>
               <button mat-menu-item *ngIf="!note.trashed" (click)="copyNote(note)"><mat-icon>content_copy</mat-icon><span>Copy note text</span></button>
               <button mat-menu-item *ngIf="!note.trashed" (click)="duplicateNote(note)"><mat-icon>file_copy</mat-icon><span>Make a copy</span></button>
+              <button mat-menu-item *ngIf="!note.trashed" (click)="downloadNoteMarkdown(note)"><mat-icon>download</mat-icon><span>Download as Markdown</span></button>
               <button mat-menu-item *ngIf="!note.trashed" (click)="togglePinned(note)"><mat-icon>{{ note.pinned ? 'keep_off' : 'push_pin' }}</mat-icon><span>{{ note.pinned ? 'Unpin note' : 'Pin note' }}</span></button>
               <button mat-menu-item *ngIf="!note.trashed" (click)="toggleArchive(note)"><mat-icon>{{ note.archived ? 'unarchive' : 'archive' }}</mat-icon><span>{{ note.archived ? 'Remove from archive' : 'Archive' }}</span></button>
               <button mat-menu-item *ngIf="note.trashed" (click)="restoreNote(note)"><mat-icon>restore_from_trash</mat-icon><span>Restore</span></button>
@@ -150,7 +168,7 @@
 
           <div class="note-tags" *ngIf="note.tags.length > 0">
             <mat-chip-set aria-label="Note tags">
-              <mat-chip *ngFor="let tag of note.tags">{{ tag }}</mat-chip>
+              <mat-chip *ngFor="let tag of note.tags" (click)="filterByTag(tag); $event.stopPropagation()">{{ tag }}</mat-chip>
             </mat-chip-set>
           </div>
 
