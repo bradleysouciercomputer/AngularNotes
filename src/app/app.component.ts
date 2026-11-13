@@ -19,7 +19,7 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Note, NoteDraft, NoteEditorDialogComponent } from './note-editor-dialog.component';
 
-export type NoteView = 'all' | 'recent' | 'favorites' | 'pinned' | 'archive' | 'trash';
+export type NoteView = 'all' | 'recent' | 'favorites' | 'pinned' | 'reminders' | 'archive' | 'trash';
 export type SortMode = 'updated' | 'created' | 'title';
 
 const STORAGE_KEY = 'angularnotes.notes.v1';
@@ -84,6 +84,7 @@ function readStoredNotes(): Note[] {
       favorite: Boolean(item.favorite),
       archived: Boolean(item.archived),
       trashed: Boolean(item.trashed),
+      reminderDate: typeof item.reminderDate === 'string' && /^\\d{4}-\\d{2}-\\d{2}$/.test(item.reminderDate) ? item.reminderDate : undefined,
       createdAt: Number(item.createdAt) || Date.now(),
       updatedAt: Number(item.updatedAt) || Date.now()
     }));
@@ -131,7 +132,7 @@ export class AppComponent {
     if (tag) return tag;
     return ({
       all: 'Notes', recent: 'Recent', favorites: 'Favorites',
-      pinned: 'Pinned', archive: 'Archive', trash: 'Trash'
+      pinned: 'Pinned', reminders: 'Reminders', archive: 'Archive', trash: 'Trash'
     })[this.activeView()];
   });
 
@@ -144,6 +145,7 @@ export class AppComponent {
       if (note.trashed) return false;
       if (selectedView === 'archive') return note.archived;
       if (note.archived) return false;
+      if (selectedView === 'reminders' && !note.reminderDate) return false;
       if (selectedView === 'favorites' && !note.favorite) return false;
       if (selectedView === 'pinned' && !note.pinned) return false;
       if (selectedView === 'recent' && Date.now() - note.updatedAt > 1000 * 60 * 60 * 24 * 14) return false;
@@ -153,6 +155,7 @@ export class AppComponent {
     });
     const mode = this.sortMode();
     return filtered.sort((a, b) => {
+      if (selectedView === 'reminders') return (a.reminderDate || '').localeCompare(b.reminderDate || '');
       if (mode === 'title') return a.title.localeCompare(b.title);
       if (mode === 'created') return b.createdAt - a.createdAt;
       return b.updatedAt - a.updatedAt;
@@ -175,6 +178,7 @@ export class AppComponent {
     if (view === 'archive') return notes.filter((note) => note.archived && !note.trashed).length;
     if (view === 'favorites') return notes.filter((note) => note.favorite && !note.archived && !note.trashed).length;
     if (view === 'pinned') return notes.filter((note) => note.pinned && !note.archived && !note.trashed).length;
+    if (view === 'reminders') return notes.filter((note) => Boolean(note.reminderDate) && !note.archived && !note.trashed).length;
     if (view === 'recent') return notes.filter((note) => !note.archived && !note.trashed && Date.now() - note.updatedAt <= 1000 * 60 * 60 * 24 * 14).length;
     return notes.filter((note) => !note.archived && !note.trashed).length;
   }
@@ -224,6 +228,41 @@ export class AppComponent {
     });
   }
 
+  createFromTemplate(template: 'meeting' | 'journal' | 'project' | 'shopping'): void {
+    const now = Date.now();
+    const note: Note = {
+      id: this.makeId(), title: '', content: '', tags: [], color: '#ffffff',
+      type: 'text', checklistItems: [], pinned: false, favorite: false,
+      archived: false, trashed: false, createdAt: now, updatedAt: now
+    };
+
+    if (template === 'meeting') {
+      note.title = 'Meeting notes';
+      note.content = 'Attendees:\n\nAgenda\n• \n\nDiscussion\n• \n\nDecisions\n• \n\nAction items\n• ';
+      note.tags = ['Work', 'Meetings'];
+      note.color = '#e8f0fe';
+    } else if (template === 'journal') {
+      note.title = 'Daily journal';
+      note.content = 'Today I am grateful for…\n\nWhat happened today?\n\nWhat I learned\n\nOne thing for tomorrow';
+      note.tags = ['Personal', 'Journal'];
+      note.color = '#fef7d1';
+    } else if (template === 'project') {
+      note.title = 'Project plan';
+      note.content = 'Goal\n\nMilestones\n1. \n2. \n3. \n\nPeople and resources\n\nRisks or blockers\n\nNext steps';
+      note.tags = ['Work', 'Projects'];
+      note.color = '#e6f4ea';
+    } else {
+      note.title = 'Shopping list';
+      note.type = 'checklist';
+      note.checklistItems = ['Produce', 'Pantry', 'Household'].map((text) => ({
+        id: this.makeId('item'), text, checked: false
+      }));
+      note.tags = ['Shopping'];
+      note.color = '#fef1e1';
+    }
+    this.openEditor(note);
+  }
+
   editNote(note: Note): void {
     this.openEditor({
       ...note,
@@ -254,6 +293,25 @@ export class AppComponent {
 
   togglePinned(note: Note): void { this.patchNote(note.id, { pinned: !note.pinned }); }
   toggleFavorite(note: Note): void { this.patchNote(note.id, { favorite: !note.favorite }); }
+  clearReminder(note: Note): void {
+    this.patchNote(note.id, { reminderDate: undefined });
+    this.snackBar.open('Reminder removed', 'Dismiss', { duration: 1800 });
+  }
+
+  private localDateString(date = new Date()): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    return year + '-' + month + '-' + day;
+  }
+
+  isReminderOverdue(note: Note): boolean {
+    return Boolean(note.reminderDate && note.reminderDate < this.localDateString());
+  }
+
+  isReminderToday(note: Note): boolean {
+    return Boolean(note.reminderDate && note.reminderDate === this.localDateString());
+  }
 
   toggleChecklistItem(note: Note, itemId: string, checked: boolean): void {
     const checklistItems = (note.checklistItems || []).map((item) =>
@@ -332,6 +390,7 @@ export class AppComponent {
   private markdownForNote(note: Note): string {
     const lines = ['# ' + (note.title || 'Untitled note'), ''];
     if (note.tags.length) lines.push('*Labels: ' + note.tags.join(', ') + '*', '');
+    if (note.reminderDate) lines.push('*Reminder: ' + note.reminderDate + '*', '');
     if (note.type === 'checklist') {
       lines.push(...(note.checklistItems || []).map((item) => '- [' + (item.checked ? 'x' : ' ') + '] ' + item.text));
     } else if (note.content.trim()) {
@@ -411,6 +470,7 @@ export class AppComponent {
         favorite: Boolean(item['favorite']),
         archived: Boolean(item['archived']),
         trashed: false,
+        reminderDate: typeof item['reminderDate'] === 'string' && /^\\d{4}-\\d{2}-\\d{2}$/.test(item['reminderDate']) ? item['reminderDate'] : undefined,
         createdAt: Number(item['createdAt']) || Date.now(),
         updatedAt: Number(item['updatedAt']) || Date.now()
       }));
