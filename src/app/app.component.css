@@ -568,3 +568,44 @@
   .bulk-selection-summary { flex: 1 0 100%; }
   .bulk-toolbar-spacer { display: none; }
 }
+
+
+/* Center the selection toolbar's Done close icon inside its circular ripple. */
+.bulk-toolbar > button[aria-label="Exit selection mode"].mat-mdc-icon-button {
+  display: inline-flex !important;
+  flex: 0 0 40px;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 40px !important;
+  min-width: 40px !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  line-height: 0 !important;
+  box-sizing: border-box;
+}
+.bulk-toolbar > button[aria-label="Exit selection mode"].mat-mdc-icon-button .mat-mdc-button-touch-target {
+  top: 50%;
+  left: 50%;
+  width: 40px;
+  height: 40px;
+  transform: translate(-50%, -50%);
+}
+.bulk-toolbar > button[aria-label="Exit selection mode"].mat-mdc-icon-button .mat-mdc-button-persistent-ripple,
+.bulk-toolbar > button[aria-label="Exit selection mode"].mat-mdc-icon-button .mdc-icon-button__ripple {
+  inset: 0;
+  border-radius: 50%;
+}
+.bulk-toolbar > button[aria-label="Exit selection mode"].mat-mdc-icon-button mat-icon {
+  display: block;
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  margin: 0 !important;
+  padding: 0;
+  font-size: 20px;
+  line-height: 20px;
+  text-align: center;
+}
