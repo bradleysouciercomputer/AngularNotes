@@ -1,5 +1,5 @@
 import { CommonModule, DatePipe } from '@angular/common';
-import { Component, computed, effect, inject, signal } from '@angular/core';
+import { Component, HostListener, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
@@ -113,14 +113,31 @@ export class AppComponent {
   readonly sortMode = signal<SortMode>('updated');
   readonly layoutMode = signal<'grid' | 'list'>('grid');
   readonly notes = signal<Note[]>(readStoredNotes());
+  readonly activeTag = signal<string | null>(null);
+  readonly availableTags = computed(() => {
+    const tags = new Set<string>();
+    for (const note of this.notes()) {
+      if (note.trashed || note.archived) continue;
+      for (const tag of note.tags) {
+        const cleaned = tag.trim();
+        if (cleaned) tags.add(cleaned);
+      }
+    }
+    return Array.from(tags).sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
+  });
 
-  readonly viewTitle = computed(() => ({
-    all: 'Notes', recent: 'Recent', favorites: 'Favorites',
-    pinned: 'Pinned', archive: 'Archive', trash: 'Trash'
-  })[this.activeView()]);
+  readonly viewTitle = computed(() => {
+    const tag = this.activeTag();
+    if (tag) return tag;
+    return ({
+      all: 'Notes', recent: 'Recent', favorites: 'Favorites',
+      pinned: 'Pinned', archive: 'Archive', trash: 'Trash'
+    })[this.activeView()];
+  });
 
   readonly visibleNotes = computed(() => {
     const selectedView = this.activeView();
+    const selectedTag = this.activeTag();
     const query = this.searchTerm().trim().toLocaleLowerCase();
     const filtered = this.notes().filter((note) => {
       if (selectedView === 'trash') return note.trashed;
@@ -130,6 +147,7 @@ export class AppComponent {
       if (selectedView === 'favorites' && !note.favorite) return false;
       if (selectedView === 'pinned' && !note.pinned) return false;
       if (selectedView === 'recent' && Date.now() - note.updatedAt > 1000 * 60 * 60 * 24 * 14) return false;
+      if (selectedTag && !note.tags.some((tag) => tag.toLocaleLowerCase() === selectedTag.toLocaleLowerCase())) return false;
       if (!query) return true;
       return [note.title, note.content, ...note.tags].join(' ').toLocaleLowerCase().includes(query);
     });
@@ -163,7 +181,21 @@ export class AppComponent {
 
   setView(view: NoteView): void {
     this.activeView.set(view);
+    this.activeTag.set(null);
     this.searchTerm.set('');
+  }
+
+  filterByTag(tag: string): void {
+    this.activeView.set('all');
+    this.activeTag.set(tag);
+    this.searchTerm.set('');
+  }
+
+  tagCount(tag: string): number {
+    return this.notes().filter((note) =>
+      !note.archived && !note.trashed &&
+      note.tags.some((item) => item.toLocaleLowerCase() === tag.toLocaleLowerCase())
+    ).length;
   }
 
   private makeId(prefix = 'note'): string {
@@ -297,6 +329,49 @@ export class AppComponent {
     ));
   }
 
+  private markdownForNote(note: Note): string {
+    const lines = ['# ' + (note.title || 'Untitled note'), ''];
+    if (note.tags.length) lines.push('*Labels: ' + note.tags.join(', ') + '*', '');
+    if (note.type === 'checklist') {
+      lines.push(...(note.checklistItems || []).map((item) => '- [' + (item.checked ? 'x' : ' ') + '] ' + item.text));
+    } else if (note.content.trim()) {
+      lines.push(note.content.trim());
+    }
+    return lines.join('\n').trim() + '\n';
+  }
+
+  downloadNoteMarkdown(note: Note): void {
+    const baseName = (note.title || 'untitled-note')
+      .normalize('NFKD')
+      .replace(/[^a-zA-Z0-9-_]+/g, '-')
+      .replace(/^-+|-+$/g, '')
+      .toLowerCase() || 'untitled-note';
+    this.downloadText(this.markdownForNote(note), baseName + '.md', 'text/markdown;charset=utf-8');
+    this.snackBar.open('Markdown note downloaded', 'Dismiss', { duration: 1800 });
+  }
+
+  exportVisibleMarkdown(): void {
+    const notes = this.visibleNotes();
+    if (!notes.length) {
+      this.snackBar.open('There are no visible notes to export.', 'Dismiss', { duration: 2000 });
+      return;
+    }
+    const markdown = notes.map((note) => this.markdownForNote(note)).join('\n---\n\n');
+    const date = new Date().toISOString().slice(0, 10);
+    this.downloadText(markdown, 'angularnotes-' + date + '.md', 'text/markdown;charset=utf-8');
+    this.snackBar.open('Exported ' + notes.length + ' notes as Markdown', 'Dismiss', { duration: 2200 });
+  }
+
+  private downloadText(content: string, filename: string, mimeType: string): void {
+    const file = new Blob([content], { type: mimeType });
+    const url = URL.createObjectURL(file);
+    const anchor = document.createElement('a');
+    anchor.href = url;
+    anchor.download = filename;
+    anchor.click();
+    URL.revokeObjectURL(url);
+  }
+
   exportNotes(): void {
     const file = new Blob([JSON.stringify(this.notes(), null, 2)], { type: 'application/json' });
     const url = URL.createObjectURL(file);
@@ -360,5 +435,39 @@ export class AppComponent {
 
   showStorageInfo(): void {
     this.snackBar.open('Your notes are stored in this browser on this device. Use Export notes to create a backup.', 'Got it', { duration: 5000 });
+  }
+
+  showKeyboardShortcuts(): void {
+    this.snackBar.open('Shortcuts: Ctrl/⌘ + N = new note · Ctrl/⌘ + Shift + L = checklist · Ctrl/⌘ + K = search', 'Got it', { duration: 6500 });
+  }
+
+  @HostListener('window:keydown', ['$event'])
+  handleKeyboardShortcuts(event: KeyboardEvent): void {
+    const modifier = event.ctrlKey || event.metaKey;
+    if (!modifier || event.altKey) return;
+
+    const key = event.key.toLowerCase();
+    if (key === 'k') {
+      event.preventDefault();
+      const search = document.querySelector<HTMLInputElement>('.search-field input');
+      search?.focus();
+      search?.select();
+      return;
+    }
+
+    if (this.dialog.openDialogs.length > 0) return;
+    const target = event.target as HTMLElement | null;
+    const editingText = !!target && (
+      target.matches('input, textarea, select') || target.isContentEditable
+    );
+    if (editingText) return;
+
+    if (key === 'n' && !event.shiftKey) {
+      event.preventDefault();
+      this.createNote();
+    } else if (key === 'l' && event.shiftKey) {
+      event.preventDefault();
+      this.createChecklist();
+    }
   }
 }
