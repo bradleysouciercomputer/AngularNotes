@@ -14,6 +14,10 @@ AngularNotes is a clean, responsive note-taking app built with **Angular 22** an
 - Choose from a set of soft note colors
 - Check off checklist items directly from the notes grid
 - Duplicate notes or copy note text to the clipboard
+- Filter notes by label from the sidebar or directly from note cards
+- Download individual notes or the current filtered view as Markdown
+- Use keyboard shortcuts: Ctrl/⌘ + N for a note, Ctrl/⌘ + Shift + L for a checklist, and Ctrl/⌘ + K to search
+- Reorder completed checklist items or clear them in one action
 - Import and export notes as JSON backups
 - Responsive layout for desktop, tablet, and mobile
 - Browser-local autosave
