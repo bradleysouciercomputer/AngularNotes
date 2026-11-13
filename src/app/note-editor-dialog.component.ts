@@ -23,9 +23,10 @@ export interface Note {
   trashed: boolean;
   createdAt: number;
   updatedAt: number;
+  reminderDate?: string;
 }
 
-export type NoteDraft = Pick<Note, 'title' | 'content' | 'tags' | 'color' | 'type' | 'checklistItems' | 'pinned' | 'favorite'>;
+export type NoteDraft = Pick<Note, 'title' | 'content' | 'tags' | 'color' | 'type' | 'checklistItems' | 'pinned' | 'favorite' | 'reminderDate'>;
 
 @Component({
   selector: 'app-note-editor-dialog',
@@ -59,6 +60,7 @@ export class NoteEditorDialogComponent {
   checklistItems = (this.data.checklistItems || []).map((item) => ({ ...item }));
   pinned = this.data.pinned;
   favorite = this.data.favorite;
+  reminderDate = this.data.reminderDate || '';
 
   addChecklistItem(): void {
     this.checklistItems = [...this.checklistItems, {
@@ -103,7 +105,8 @@ export class NoteEditorDialogComponent {
       type: this.type,
       checklistItems: this.checklistItems.filter((item) => item.text.trim()).map((item) => ({ ...item, text: item.text.trim() })),
       pinned: this.pinned,
-      favorite: this.favorite
+      favorite: this.favorite,
+      reminderDate: this.reminderDate || undefined
     });
   }
 }
