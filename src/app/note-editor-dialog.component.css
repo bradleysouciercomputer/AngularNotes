@@ -161,3 +161,7 @@ mat-dialog-actions button { border-radius: 20px; }
   color: #5f6368;
   font-size: 11px;
 }
+
+
+.reminder-field { width: 100%; }
+.reminder-field input[type="date"] { color: #202124; }
