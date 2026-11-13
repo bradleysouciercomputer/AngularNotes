@@ -17,6 +17,9 @@ AngularNotes is a clean, responsive note-taking app built with **Angular 22** an
 - Filter notes by label from the sidebar or directly from note cards
 - Download individual notes or the current filtered view as Markdown
 - Use keyboard shortcuts: Ctrl/⌘ + N for a note, Ctrl/⌘ + Shift + L for a checklist, and Ctrl/⌘ + K to search
+- Create notes from Meeting, Daily journal, Project plan, and Shopping list templates
+- Set a reminder date on any note and review dated notes in the Reminders view
+- See overdue and due-today reminder indicators on note cards; reminder dates are local in-app dates and do not send device notifications
 - Reorder completed checklist items or clear them in one action
 - Import and export notes as JSON backups
 - Responsive layout for desktop, tablet, and mobile
