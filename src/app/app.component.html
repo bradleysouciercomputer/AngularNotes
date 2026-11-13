@@ -71,7 +71,7 @@
 
       <mat-form-field appearance="outline" class="search-field" subscriptSizing="dynamic">
         <mat-icon matPrefix>search</mat-icon>
-        <input matInput placeholder="Search your notes" aria-label="Search notes" [ngModel]="searchTerm()" (ngModelChange)="searchTerm.set($event)">
+        <input matInput placeholder="Search notes, labels, checklists..." aria-label="Search notes" [ngModel]="searchTerm()" (ngModelChange)="setSearchTerm($event)">
         <button *ngIf="searchTerm()" mat-icon-button matSuffix aria-label="Clear search" (click)="searchTerm.set('')">
           <mat-icon>close</mat-icon>
         </button>
@@ -125,6 +125,16 @@
               <mat-option value="title">Title A–Z</mat-option>
             </mat-select>
           </mat-form-field>
+          <button
+            mat-icon-button
+            *ngIf="activeView() !== 'trash'"
+            class="select-mode-toggle"
+            [class.select-mode-active]="selectionMode()"
+            (click)="toggleSelectionMode()"
+            [matTooltip]="selectionMode() ? 'Exit selection mode' : 'Select notes'"
+            [attr.aria-label]="selectionMode() ? 'Exit selection mode' : 'Select notes'">
+            <mat-icon>{{ selectionMode() ? 'check_box' : 'check_box_outline_blank' }}</mat-icon>
+          </button>
           <button mat-icon-button class="layout-toggle" (click)="toggleLayout()" [matTooltip]="layoutMode() === 'grid' ? 'Switch to list view' : 'Switch to grid view'" aria-label="Change note layout">
             <mat-icon>{{ layoutMode() === 'grid' ? 'view_agenda' : 'grid_view' }}</mat-icon>
           </button>
@@ -134,9 +144,48 @@
         </div>
       </section>
 
+      <section class="bulk-toolbar" *ngIf="selectionMode()">
+        <div class="bulk-selection-summary">
+          <button mat-button (click)="selectAllVisible()">
+            <mat-icon>{{ allVisibleSelected() ? 'indeterminate_check_box' : 'select_all' }}</mat-icon>
+            {{ allVisibleSelected() ? 'Clear visible' : 'Select visible' }}
+          </button>
+          <span>{{ selectedNoteIds().length }} selected</span>
+        </div>
+        <span class="bulk-toolbar-spacer"></span>
+        <button mat-button (click)="bulkFavorite()" [disabled]="selectedNoteIds().length === 0">
+          <mat-icon>favorite_border</mat-icon> Favorite
+        </button>
+        <button mat-button (click)="bulkPin()" [disabled]="selectedNoteIds().length === 0">
+          <mat-icon>push_pin</mat-icon> Pin
+        </button>
+        <button mat-button (click)="bulkArchive()" [disabled]="selectedNoteIds().length === 0">
+          <mat-icon>{{ activeView() === 'archive' ? 'unarchive' : 'archive' }}</mat-icon>
+          {{ activeView() === 'archive' ? 'Restore' : 'Archive' }}
+        </button>
+        <button mat-button class="bulk-delete" (click)="bulkTrash()" [disabled]="selectedNoteIds().length === 0">
+          <mat-icon>delete_outline</mat-icon> Delete
+        </button>
+        <button mat-icon-button aria-label="Exit selection mode" matTooltip="Done" (click)="clearSelectionMode()">
+          <mat-icon>close</mat-icon>
+        </button>
+      </section>
+
       <section class="notes-grid" [class.list-mode]="layoutMode() === 'list'" *ngIf="visibleNotes().length > 0; else emptyState">
-        <mat-card class="note-card" appearance="outlined" *ngFor="let note of visibleNotes(); trackBy: trackById" [style.background-color]="note.color || '#ffffff'">
+        <mat-card
+          class="note-card"
+          appearance="outlined"
+          *ngFor="let note of visibleNotes(); trackBy: trackById"
+          [class.note-selected]="selectionMode() && isNoteSelected(note.id)"
+          [style.background-color]="note.color || '#ffffff'">
           <div class="note-card-top">
+            <mat-checkbox
+              *ngIf="selectionMode()"
+              class="note-select-checkbox"
+              [checked]="isNoteSelected(note.id)"
+              (click)="$event.stopPropagation()"
+              (change)="toggleNoteSelection(note, $event.checked)"
+              [attr.aria-label]="'Select ' + (note.title || 'Untitled note')"></mat-checkbox>
             <span class="note-pinned" *ngIf="note.pinned && !note.trashed" aria-label="Pinned note">
               <mat-icon>push_pin</mat-icon>
             </span>
@@ -151,6 +200,7 @@
             <mat-menu #noteMenu="matMenu">
               <button mat-menu-item *ngIf="!note.trashed" (click)="editNote(note)"><mat-icon>edit</mat-icon><span>Edit note</span></button>
               <button mat-menu-item *ngIf="!note.trashed" (click)="copyNote(note)"><mat-icon>content_copy</mat-icon><span>Copy note text</span></button>
+              <button mat-menu-item *ngIf="!note.trashed" (click)="shareNote(note)"><mat-icon>share</mat-icon><span>Share note…</span></button>
               <button mat-menu-item *ngIf="!note.trashed" (click)="duplicateNote(note)"><mat-icon>file_copy</mat-icon><span>Make a copy</span></button>
               <button mat-menu-item *ngIf="!note.trashed" (click)="downloadNoteMarkdown(note)"><mat-icon>download</mat-icon><span>Download as Markdown</span></button>
               <button mat-menu-item *ngIf="!note.trashed && note.reminderDate" (click)="clearReminder(note)"><mat-icon>notifications_off</mat-icon><span>Remove reminder</span></button>
@@ -162,7 +212,7 @@
             </mat-menu>
           </div>
 
-          <button mat-button class="note-body" (click)="editNote(note)">
+          <button mat-button class="note-body" (click)="selectionMode() ? toggleNoteSelection(note) : editNote(note)">
             <span class="note-title">{{ note.title || 'Untitled note' }}</span>
             <span class="note-text" *ngIf="note.content">{{ note.content }}</span>
             <span class="note-text" *ngIf="!note.content && note.type !== 'checklist'">This note is empty.</span>
@@ -210,7 +260,7 @@
           <h2>{{ searchTerm() ? 'No notes found' : activeView() === 'trash' ? 'Trash is empty' : activeView() === 'favorites' ? 'No favorites yet' : activeView() === 'pinned' ? 'No pinned notes' : activeView() === 'reminders' ? 'No reminders set' : activeView() === 'archive' ? 'Nothing in your archive' : 'Notes you add appear here' }}</h2>
           <p>{{ searchTerm() ? 'Try another search term.' : activeView() === 'trash' ? 'Deleted notes will appear here.' : activeView() === 'favorites' ? 'Favorite a note to find it here.' : activeView() === 'pinned' ? 'Pin a note to keep it close.' : activeView() === 'reminders' ? 'Add a reminder date to any note to see it here.' : activeView() === 'archive' ? 'Archive notes you want to keep for later.' : 'Capture an idea, a list, or anything you want to remember.' }}</p>
           <button *ngIf="!searchTerm() && activeView() === 'all'" mat-flat-button color="primary" (click)="createNote()">Create note</button>
-          <button *ngIf="searchTerm()" mat-button (click)="searchTerm.set('')">Clear search</button>
+          <button *ngIf="searchTerm()" mat-button (click)="setSearchTerm('')">Clear search</button>
         </section>
       </ng-template>
     </main>

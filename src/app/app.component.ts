@@ -115,6 +115,8 @@ export class AppComponent {
   readonly layoutMode = signal<'grid' | 'list'>('grid');
   readonly notes = signal<Note[]>(readStoredNotes());
   readonly activeTag = signal<string | null>(null);
+  readonly selectionMode = signal(false);
+  readonly selectedNoteIds = signal<string[]>([]);
   readonly availableTags = computed(() => {
     const tags = new Set<string>();
     for (const note of this.notes()) {
@@ -151,7 +153,9 @@ export class AppComponent {
       if (selectedView === 'recent' && Date.now() - note.updatedAt > 1000 * 60 * 60 * 24 * 14) return false;
       if (selectedTag && !note.tags.some((tag) => tag.toLocaleLowerCase() === selectedTag.toLocaleLowerCase())) return false;
       if (!query) return true;
-      return [note.title, note.content, ...note.tags].join(' ').toLocaleLowerCase().includes(query);
+      const checklistText = (note.checklistItems || []).map((item) => item.text).join(' ');
+      return [note.title, note.content, checklistText, note.reminderDate || '', ...note.tags]
+        .join(' ').toLocaleLowerCase().includes(query);
     });
     const mode = this.sortMode();
     return filtered.sort((a, b) => {
@@ -160,6 +164,12 @@ export class AppComponent {
       if (mode === 'created') return b.createdAt - a.createdAt;
       return b.updatedAt - a.updatedAt;
     });
+  });
+
+  readonly allVisibleSelected = computed(() => {
+    const visible = this.visibleNotes();
+    const selected = new Set(this.selectedNoteIds());
+    return visible.length > 0 && visible.every((note) => selected.has(note.id));
   });
 
   constructor() {
@@ -187,12 +197,81 @@ export class AppComponent {
     this.activeView.set(view);
     this.activeTag.set(null);
     this.searchTerm.set('');
+    this.clearSelectionMode();
+  }
+
+  setSearchTerm(value: string): void {
+    if (value !== this.searchTerm()) this.selectedNoteIds.set([]);
+    this.searchTerm.set(value);
+  }
+
+  toggleSelectionMode(): void {
+    if (this.activeView() === 'trash') return;
+    if (this.selectionMode()) {
+      this.clearSelectionMode();
+    } else {
+      this.selectionMode.set(true);
+      this.selectedNoteIds.set([]);
+    }
+  }
+
+  clearSelectionMode(): void {
+    this.selectionMode.set(false);
+    this.selectedNoteIds.set([]);
+  }
+
+  isNoteSelected(id: string): boolean {
+    return this.selectedNoteIds().includes(id);
+  }
+
+  toggleNoteSelection(note: Note, checked?: boolean): void {
+    const selected = this.selectedNoteIds();
+    const currentlySelected = selected.includes(note.id);
+    const shouldSelect = checked ?? !currentlySelected;
+    this.selectedNoteIds.set(
+      shouldSelect
+        ? (currentlySelected ? selected : [...selected, note.id])
+        : selected.filter((id) => id !== note.id)
+    );
+  }
+
+  selectAllVisible(): void {
+    const visibleIds = this.visibleNotes().map((note) => note.id);
+    if (this.allVisibleSelected()) {
+      const visible = new Set(visibleIds);
+      this.selectedNoteIds.update((ids) => ids.filter((id) => !visible.has(id)));
+    } else {
+      this.selectedNoteIds.update((ids) => Array.from(new Set([...ids, ...visibleIds])));
+    }
+  }
+
+  private applyBulkChanges(changes: Partial<Note>, successMessage: string): void {
+    const selected = new Set(this.selectedNoteIds());
+    if (!selected.size) return;
+    const now = Date.now();
+    this.notes.update((current) => current.map((note) =>
+      selected.has(note.id) ? { ...note, ...changes, updatedAt: now } : note
+    ));
+    const count = selected.size;
+    this.clearSelectionMode();
+    this.snackBar.open(successMessage.replace('{count}', String(count)), 'Dismiss', { duration: 2200 });
+  }
+
+  bulkFavorite(): void { this.applyBulkChanges({ favorite: true }, 'Added {count} notes to favorites'); }
+  bulkPin(): void { this.applyBulkChanges({ pinned: true }, 'Pinned {count} notes'); }
+  bulkArchive(): void {
+    const archived = this.activeView() !== 'archive';
+    this.applyBulkChanges({ archived }, archived ? 'Archived {count} notes' : 'Restored {count} notes from archive');
+  }
+  bulkTrash(): void {
+    this.applyBulkChanges({ trashed: true, archived: false }, 'Moved {count} notes to trash');
   }
 
   filterByTag(tag: string): void {
     this.activeView.set('all');
     this.activeTag.set(tag);
     this.searchTerm.set('');
+    this.clearSelectionMode();
   }
 
   tagCount(tag: string): number {
@@ -272,6 +351,7 @@ export class AppComponent {
   }
 
   private openEditor(note: Note): void {
+    this.clearSelectionMode();
     const ref = this.dialog.open<NoteEditorDialogComponent, Note, NoteDraft>(
       NoteEditorDialogComponent,
       {
@@ -339,16 +419,34 @@ export class AppComponent {
     this.snackBar.open('Note duplicated', 'Dismiss', { duration: 1800 });
   }
 
-  async copyNote(note: Note): Promise<void> {
+  private plainTextForNote(note: Note): string {
     const checklistText = note.type === 'checklist'
       ? (note.checklistItems || []).map((item) => (item.checked ? '[x] ' : '[ ] ') + item.text).join('\n')
       : '';
-    const text = [note.title, note.content, checklistText].filter(Boolean).join('\n\n');
+    return [note.title, note.content, checklistText].filter(Boolean).join('\n\n');
+  }
+
+  async copyNote(note: Note): Promise<void> {
     try {
-      await navigator.clipboard.writeText(text);
+      await navigator.clipboard.writeText(this.plainTextForNote(note));
       this.snackBar.open('Note copied to clipboard', 'Dismiss', { duration: 1800 });
     } catch {
       this.snackBar.open('Clipboard access is unavailable in this browser.', 'Dismiss', { duration: 3000 });
+    }
+  }
+
+  async shareNote(note: Note): Promise<void> {
+    const title = note.title || 'AngularNotes note';
+    const text = this.plainTextForNote(note);
+    if (typeof navigator.share !== 'function') {
+      await this.copyNote(note);
+      return;
+    }
+    try {
+      await navigator.share({ title, text });
+    } catch (error) {
+      if (error instanceof DOMException && error.name === 'AbortError') return;
+      this.snackBar.open('Sharing is unavailable here. Try Copy note text instead.', 'Dismiss', { duration: 3000 });
     }
   }
 
@@ -498,15 +596,19 @@ export class AppComponent {
   }
 
   showKeyboardShortcuts(): void {
-    this.snackBar.open('Shortcuts: Ctrl/⌘ + N = new note · Ctrl/⌘ + Shift + L = checklist · Ctrl/⌘ + K = search', 'Got it', { duration: 6500 });
+    this.snackBar.open('Shortcuts: Ctrl/⌘ + N = new note · Ctrl/⌘ + Shift + L = checklist · Ctrl/⌘ + K = search · Ctrl/⌘ + Shift + A = select notes · Esc = exit selection', 'Got it', { duration: 7000 });
   }
 
   @HostListener('window:keydown', ['$event'])
   handleKeyboardShortcuts(event: KeyboardEvent): void {
+    const key = event.key.toLowerCase();
+    if (key === 'escape' && this.selectionMode()) {
+      this.clearSelectionMode();
+      return;
+    }
+
     const modifier = event.ctrlKey || event.metaKey;
     if (!modifier || event.altKey) return;
-
-    const key = event.key.toLowerCase();
     if (key === 'k') {
       event.preventDefault();
       const search = document.querySelector<HTMLInputElement>('.search-field input');
@@ -528,6 +630,9 @@ export class AppComponent {
     } else if (key === 'l' && event.shiftKey) {
       event.preventDefault();
       this.createChecklist();
+    } else if (key === 'a' && event.shiftKey) {
+      event.preventDefault();
+      this.toggleSelectionMode();
     }
   }
 }

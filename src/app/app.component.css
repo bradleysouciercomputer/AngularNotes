@@ -506,3 +506,65 @@
 .note-reminder mat-icon { width: 14px; height: 14px; font-size: 14px; }
 .note-reminder.reminder-today { background: #e8f0fe; color: #174ea6; }
 .note-reminder.reminder-overdue { background: #fce8e6; color: #b3261e; }
+
+
+/* Multi-note selection and bulk actions */
+.select-mode-toggle { color: #5f6368; }
+.select-mode-toggle.select-mode-active {
+  color: #174ea6;
+  background: #e8f0fe;
+}
+.bulk-toolbar {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 4px;
+  min-height: 54px;
+  margin: -4px 0 18px;
+  padding: 6px 10px;
+  border: 1px solid #d2e3fc;
+  border-radius: 10px;
+  background: #f8fbff;
+  color: #3c4043;
+}
+.bulk-selection-summary {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-right: 6px;
+}
+.bulk-selection-summary span {
+  color: #5f6368;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.bulk-selection-summary button,
+.bulk-toolbar > button:not([mat-icon-button]) {
+  min-height: 36px;
+  border-radius: 18px;
+  font-size: 12px;
+}
+.bulk-toolbar mat-icon {
+  width: 18px;
+  height: 18px;
+  margin-right: 4px;
+  font-size: 18px;
+}
+.bulk-toolbar-spacer { flex: 1 1 auto; }
+.bulk-toolbar .bulk-delete { color: #b3261e; }
+.note-card.note-selected {
+  border-color: #1a73e8 !important;
+  box-shadow: 0 0 0 1px #1a73e8 !important;
+}
+.note-select-checkbox {
+  display: inline-flex;
+  align-items: center;
+  flex: 0 0 38px;
+  width: 38px;
+  margin-left: 1px;
+}
+@media (max-width: 700px) {
+  .bulk-toolbar { align-items: flex-start; padding: 8px; }
+  .bulk-selection-summary { flex: 1 0 100%; }
+  .bulk-toolbar-spacer { display: none; }
+}

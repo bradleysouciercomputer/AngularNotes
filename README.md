@@ -5,7 +5,7 @@ AngularNotes is a clean, responsive note-taking app built with **Angular 22** an
 ## Features
 
 - Create and edit text notes or interactive checklists with a title and comma-separated labels
-- Search note titles, note content, and tags
+- Search note titles, note content, tags, reminder dates, and checklist items
 - Pin important notes and add notes to Favorites
 - Organize notes into Recent, Archive, and Trash views
 - Restore notes from Trash or permanently delete them
@@ -15,6 +15,8 @@ AngularNotes is a clean, responsive note-taking app built with **Angular 22** an
 - Check off checklist items directly from the notes grid
 - Duplicate notes or copy note text to the clipboard
 - Filter notes by label from the sidebar or directly from note cards
+- Select multiple notes at once to bulk favorite, pin, archive, restore, or delete them
+- Share notes with the device or browser share sheet when supported, with copy-to-clipboard fallback
 - Download individual notes or the current filtered view as Markdown
 - Use keyboard shortcuts: Ctrl/⌘ + N for a note, Ctrl/⌘ + Shift + L for a checklist, and Ctrl/⌘ + K to search
 - Create notes from Meeting, Daily journal, Project plan, and Shopping list templates
