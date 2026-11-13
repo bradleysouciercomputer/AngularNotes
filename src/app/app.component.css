@@ -613,3 +613,55 @@
   line-height: 20px;
   text-align: center;
 }
+
+
+/* Note type filters */
+.type-filter-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: -8px 0 16px;
+}
+.type-filter-label {
+  color: #5f6368;
+  font-size: 12px;
+  font-weight: 500;
+}
+.type-filter-row mat-chip-listbox { max-width: 100%; }
+
+/* Bulk color picker */
+.bulk-color-swatch {
+  display: inline-block;
+  flex: 0 0 18px;
+  width: 18px;
+  height: 18px;
+  margin-right: 10px;
+  border: 1px solid rgba(60, 64, 67, .24);
+  border-radius: 50%;
+  vertical-align: middle;
+}
+
+/* Keep Delete visibly disabled just like the other selection actions. */
+.bulk-toolbar .bulk-delete:disabled,
+.bulk-toolbar .bulk-delete[disabled],
+.bulk-toolbar .bulk-delete.mat-mdc-button-disabled,
+.bulk-toolbar .bulk-delete.mdc-button--disabled {
+  color: rgba(60, 64, 67, .38) !important;
+  opacity: 1 !important;
+  cursor: default !important;
+  --mdc-text-button-label-text-color: rgba(60, 64, 67, .38);
+  --mat-text-button-label-text-color: rgba(60, 64, 67, .38);
+}
+.bulk-toolbar .bulk-delete:disabled mat-icon,
+.bulk-toolbar .bulk-delete[disabled] mat-icon,
+.bulk-toolbar .bulk-delete.mat-mdc-button-disabled mat-icon {
+  color: inherit !important;
+}
+@media (max-width: 700px) {
+  .type-filter-row {
+    margin-bottom: 14px;
+    gap: 6px;
+  }
+  .type-filter-row mat-chip-listbox { width: 100%; }
+}

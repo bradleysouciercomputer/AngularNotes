@@ -9,13 +9,14 @@ AngularNotes is a clean, responsive note-taking app built with **Angular 22** an
 - Pin important notes and add notes to Favorites
 - Organize notes into Recent, Archive, and Trash views
 - Restore notes from Trash or permanently delete them
-- Sort by last updated, date created, or title
+- Filter between all notes, text notes, and checklists
+- Sort by newest or oldest edits, newest or oldest creation, title in either direction, or reminder date
 - Switch between grid and list layouts
 - Choose from a set of soft note colors
 - Check off checklist items directly from the notes grid
 - Duplicate notes or copy note text to the clipboard
 - Filter notes by label from the sidebar or directly from note cards
-- Select multiple notes at once to bulk favorite, pin, archive, restore, or delete them
+- Select multiple notes at once to toggle favorites and pins, change colors, clear reminders, archive, restore, or delete them
 - Share notes with the device or browser share sheet when supported, with copy-to-clipboard fallback
 - Download individual notes or the current filtered view as Markdown
 - Use keyboard shortcuts: Ctrl/⌘ + N for a note, Ctrl/⌘ + Shift + L for a checklist, and Ctrl/⌘ + K to search

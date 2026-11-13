@@ -20,13 +20,23 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { Note, NoteDraft, NoteEditorDialogComponent } from './note-editor-dialog.component';
 
 export type NoteView = 'all' | 'recent' | 'favorites' | 'pinned' | 'reminders' | 'archive' | 'trash';
-export type SortMode = 'updated' | 'created' | 'title';
+export type SortMode = 'updated' | 'updated-asc' | 'created' | 'created-asc' | 'title' | 'title-desc' | 'reminder';
+export type NoteTypeFilter = 'all' | 'text' | 'checklist';
 
 const STORAGE_KEY = 'angularnotes.notes.v1';
-const NOTE_COLORS = [
-  '#ffffff', '#fce8e6', '#fef1e1', '#fef7d1', '#e6f4ea',
-  '#e4f7f5', '#e8f0fe', '#f3e8fd', '#fce8f3', '#f1f3f4'
+const NOTE_COLOR_OPTIONS = [
+  { label: 'Default', value: '#ffffff' },
+  { label: 'Red', value: '#fce8e6' },
+  { label: 'Orange', value: '#fef1e1' },
+  { label: 'Yellow', value: '#fef7d1' },
+  { label: 'Green', value: '#e6f4ea' },
+  { label: 'Teal', value: '#e4f7f5' },
+  { label: 'Blue', value: '#e8f0fe' },
+  { label: 'Purple', value: '#f3e8fd' },
+  { label: 'Pink', value: '#fce8f3' },
+  { label: 'Gray', value: '#f1f3f4' }
 ];
+const NOTE_COLORS: string[] = NOTE_COLOR_OPTIONS.map((option) => option.value);
 
 function starterNotes(): Note[] {
   const now = Date.now();
@@ -112,11 +122,26 @@ export class AppComponent {
   readonly activeView = signal<NoteView>('all');
   readonly searchTerm = signal('');
   readonly sortMode = signal<SortMode>('updated');
+  readonly noteTypeFilter = signal<NoteTypeFilter>('all');
+  readonly noteColorOptions = NOTE_COLOR_OPTIONS;
   readonly layoutMode = signal<'grid' | 'list'>('grid');
   readonly notes = signal<Note[]>(readStoredNotes());
   readonly activeTag = signal<string | null>(null);
   readonly selectionMode = signal(false);
   readonly selectedNoteIds = signal<string[]>([]);
+  readonly selectedNotes = computed(() => {
+    const selected = new Set(this.selectedNoteIds());
+    return this.notes().filter((note) => selected.has(note.id));
+  });
+  readonly selectedAllFavorited = computed(() =>
+    this.selectedNotes().length > 0 && this.selectedNotes().every((note) => note.favorite)
+  );
+  readonly selectedAllPinned = computed(() =>
+    this.selectedNotes().length > 0 && this.selectedNotes().every((note) => note.pinned)
+  );
+  readonly selectedReminderCount = computed(() =>
+    this.selectedNotes().filter((note) => Boolean(note.reminderDate)).length
+  );
   readonly availableTags = computed(() => {
     const tags = new Set<string>();
     for (const note of this.notes()) {
@@ -141,12 +166,21 @@ export class AppComponent {
   readonly visibleNotes = computed(() => {
     const selectedView = this.activeView();
     const selectedTag = this.activeTag();
+    const typeFilter = this.noteTypeFilter();
     const query = this.searchTerm().trim().toLocaleLowerCase();
     const filtered = this.notes().filter((note) => {
-      if (selectedView === 'trash') return note.trashed;
-      if (note.trashed) return false;
-      if (selectedView === 'archive') return note.archived;
-      if (note.archived) return false;
+      if (selectedView === 'trash') {
+        if (!note.trashed) return false;
+      } else {
+        if (note.trashed) return false;
+        if (selectedView === 'archive') {
+          if (!note.archived) return false;
+        } else if (note.archived) {
+          return false;
+        }
+      }
+      if (typeFilter === 'text' && note.type !== 'text') return false;
+      if (typeFilter === 'checklist' && note.type !== 'checklist') return false;
       if (selectedView === 'reminders' && !note.reminderDate) return false;
       if (selectedView === 'favorites' && !note.favorite) return false;
       if (selectedView === 'pinned' && !note.pinned) return false;
@@ -159,9 +193,15 @@ export class AppComponent {
     });
     const mode = this.sortMode();
     return filtered.sort((a, b) => {
+      if (mode === 'reminder') {
+        return (a.reminderDate || '9999-12-31').localeCompare(b.reminderDate || '9999-12-31');
+      }
       if (selectedView === 'reminders') return (a.reminderDate || '').localeCompare(b.reminderDate || '');
       if (mode === 'title') return a.title.localeCompare(b.title);
+      if (mode === 'title-desc') return b.title.localeCompare(a.title);
       if (mode === 'created') return b.createdAt - a.createdAt;
+      if (mode === 'created-asc') return a.createdAt - b.createdAt;
+      if (mode === 'updated-asc') return a.updatedAt - b.updatedAt;
       return b.updatedAt - a.updatedAt;
     });
   });
@@ -203,6 +243,11 @@ export class AppComponent {
   setSearchTerm(value: string): void {
     if (value !== this.searchTerm()) this.selectedNoteIds.set([]);
     this.searchTerm.set(value);
+  }
+
+  setNoteTypeFilter(value: NoteTypeFilter): void {
+    this.noteTypeFilter.set(value);
+    this.selectedNoteIds.set([]);
   }
 
   toggleSelectionMode(): void {
@@ -257,8 +302,42 @@ export class AppComponent {
     this.snackBar.open(successMessage.replace('{count}', String(count)), 'Dismiss', { duration: 2200 });
   }
 
-  bulkFavorite(): void { this.applyBulkChanges({ favorite: true }, 'Added {count} notes to favorites'); }
-  bulkPin(): void { this.applyBulkChanges({ pinned: true }, 'Pinned {count} notes'); }
+  bulkFavorite(): void {
+    const favorite = !this.selectedAllFavorited();
+    this.applyBulkChanges(
+      { favorite },
+      favorite ? 'Added {count} notes to favorites' : 'Removed {count} notes from favorites'
+    );
+  }
+
+  bulkPin(): void {
+    const pinned = !this.selectedAllPinned();
+    this.applyBulkChanges(
+      { pinned },
+      pinned ? 'Pinned {count} notes' : 'Unpinned {count} notes'
+    );
+  }
+
+  bulkSetColor(color: string): void {
+    if (!NOTE_COLORS.includes(color)) return;
+    this.applyBulkChanges({ color }, 'Updated the color of {count} notes');
+  }
+
+  bulkClearReminders(): void {
+    const reminderNotes = this.selectedNotes().filter((note) => Boolean(note.reminderDate));
+    if (!reminderNotes.length) return;
+    const reminderIds = new Set(reminderNotes.map((note) => note.id));
+    const now = Date.now();
+    this.notes.update((current) => current.map((note) =>
+      reminderIds.has(note.id) ? { ...note, reminderDate: undefined, updatedAt: now } : note
+    ));
+    this.clearSelectionMode();
+    this.snackBar.open(
+      'Removed reminders from ' + reminderNotes.length + ' notes',
+      'Dismiss',
+      { duration: 2200 }
+    );
+  }
   bulkArchive(): void {
     const archived = this.activeView() !== 'archive';
     this.applyBulkChanges({ archived }, archived ? 'Archived {count} notes' : 'Restored {count} notes from archive');

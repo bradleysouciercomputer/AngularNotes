@@ -120,9 +120,13 @@
           <mat-form-field appearance="outline" class="sort-field" subscriptSizing="dynamic">
             <mat-icon matPrefix>sort</mat-icon>
             <mat-select aria-label="Sort notes" [value]="sortMode()" (selectionChange)="sortMode.set($event.value)">
-              <mat-option value="updated">Last edited</mat-option>
-              <mat-option value="created">Date created</mat-option>
+              <mat-option value="updated">Last edited (newest)</mat-option>
+              <mat-option value="updated-asc">Last edited (oldest)</mat-option>
+              <mat-option value="created">Created (newest)</mat-option>
+              <mat-option value="created-asc">Created (oldest)</mat-option>
               <mat-option value="title">Title A–Z</mat-option>
+              <mat-option value="title-desc">Title Z–A</mat-option>
+              <mat-option value="reminder">Reminder date</mat-option>
             </mat-select>
           </mat-form-field>
           <button
@@ -144,6 +148,18 @@
         </div>
       </section>
 
+      <div class="type-filter-row">
+        <span class="type-filter-label">Show</span>
+        <mat-chip-listbox
+          aria-label="Filter notes by type"
+          [value]="noteTypeFilter()"
+          (change)="setNoteTypeFilter($event.value)">
+          <mat-chip-option value="all">All notes</mat-chip-option>
+          <mat-chip-option value="text">Text</mat-chip-option>
+          <mat-chip-option value="checklist">Checklists</mat-chip-option>
+        </mat-chip-listbox>
+      </div>
+
       <section class="bulk-toolbar" *ngIf="selectionMode()">
         <div class="bulk-selection-summary">
           <button mat-button (click)="selectAllVisible()">
@@ -154,14 +170,28 @@
         </div>
         <span class="bulk-toolbar-spacer"></span>
         <button mat-button (click)="bulkFavorite()" [disabled]="selectedNoteIds().length === 0">
-          <mat-icon>favorite_border</mat-icon> Favorite
+          <mat-icon>{{ selectedAllFavorited() ? 'favorite' : 'favorite_border' }}</mat-icon>
+          {{ selectedAllFavorited() ? 'Unfavorite' : 'Favorite' }}
         </button>
         <button mat-button (click)="bulkPin()" [disabled]="selectedNoteIds().length === 0">
-          <mat-icon>push_pin</mat-icon> Pin
+          <mat-icon>{{ selectedAllPinned() ? 'keep_off' : 'push_pin' }}</mat-icon>
+          {{ selectedAllPinned() ? 'Unpin' : 'Pin' }}
         </button>
         <button mat-button (click)="bulkArchive()" [disabled]="selectedNoteIds().length === 0">
           <mat-icon>{{ activeView() === 'archive' ? 'unarchive' : 'archive' }}</mat-icon>
           {{ activeView() === 'archive' ? 'Restore' : 'Archive' }}
+        </button>
+        <button mat-button [matMenuTriggerFor]="bulkColorMenu" [disabled]="selectedNoteIds().length === 0">
+          <mat-icon>palette</mat-icon> Color
+        </button>
+        <mat-menu #bulkColorMenu="matMenu">
+          <button mat-menu-item *ngFor="let option of noteColorOptions" (click)="bulkSetColor(option.value)">
+            <span class="bulk-color-swatch" [style.background-color]="option.value"></span>
+            <span>{{ option.label }}</span>
+          </button>
+        </mat-menu>
+        <button mat-button (click)="bulkClearReminders()" [disabled]="selectedReminderCount() === 0">
+          <mat-icon>notifications_off</mat-icon> Clear reminders
         </button>
         <button mat-button class="bulk-delete" (click)="bulkTrash()" [disabled]="selectedNoteIds().length === 0">
           <mat-icon>delete_outline</mat-icon> Delete
