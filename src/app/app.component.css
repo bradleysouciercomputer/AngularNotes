@@ -552,6 +552,10 @@
 }
 .bulk-toolbar-spacer { flex: 1 1 auto; }
 .bulk-toolbar .bulk-delete { color: #b3261e; }
+.bulk-toolbar .bulk-delete:disabled,
+.bulk-toolbar .bulk-delete.mat-mdc-button-disabled {
+  color: rgba(60, 64, 67, 0.38) !important;
+}
 .note-card.note-selected {
   border-color: #1a73e8 !important;
   box-shadow: 0 0 0 1px #1a73e8 !important;
