@@ -36,6 +36,15 @@
     </button>
   </div>
 
+  <mat-form-field appearance="outline" class="reminder-field">
+    <mat-label>Reminder date</mat-label>
+    <input matInput type="date" [(ngModel)]="reminderDate" name="reminderDate" aria-label="Reminder date">
+    <mat-hint>Shows in your Reminders list. It does not send a device notification.</mat-hint>
+    <button *ngIf="reminderDate" mat-icon-button matSuffix type="button" aria-label="Clear reminder date" matTooltip="Clear reminder" (click)="reminderDate = ''">
+      <mat-icon>close</mat-icon>
+    </button>
+  </mat-form-field>
+
   <mat-form-field appearance="outline" class="tags-field">
     <mat-label>Labels</mat-label>
     <input matInput [(ngModel)]="tagsText" name="tags" placeholder="Work, Ideas, Personal">
