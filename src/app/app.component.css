@@ -469,3 +469,18 @@
 @media (max-width: 700px) {
   .quick-note-shell { margin-bottom: 34px; }
 }
+
+
+/* Dynamic label navigation and filterable chips */
+.tag-navigation {
+  max-height: 34vh;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.tag-navigation button { min-width: 0; }
+.tag-navigation [matListItemTitle] {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.note-tags mat-chip { cursor: pointer; }
