@@ -23,8 +23,12 @@ AngularNotes is a clean, responsive note-taking app built with **Angular 22** an
 - Use keyboard shortcuts: Ctrl/⌘ + N for a note, Ctrl/⌘ + Shift + L for a checklist, and Ctrl/⌘ + K to search
 - Create notes from Meeting, Daily journal, Project plan, Shopping list, Recipe, Reading list, and Travel plan templates
 - Set a reminder date on any note with Today, Tomorrow, and Next week quick presets
+- Use dedicated Today (overdue and due today) and Upcoming (next seven days) reminder collections
+- Snooze a reminder until tomorrow or one week from a note's actions menu
+- Enable optional desktop notifications for due reminders; notifications are sent once per reminder date while the app is open, and overdue reminders are checked when you return
 - View live word and character counts while editing, and save with Ctrl/⌘ + Enter
-- See overdue and due-today reminder indicators on note cards; reminder dates are local in-app dates and do not send device notifications
+- See overdue and due-today reminder indicators on note cards; reminder dates are date-only and interpreted using your device's local date
+- Desktop notifications are opt-in from More options and require browser permission. They are checked while the app tab is open; browser scheduling is not guaranteed after you close the tab or browser
 - Reorder completed checklist items or clear them in one action
 - Import and export notes as JSON backups
 - Responsive layout for desktop, tablet, and mobile
@@ -66,6 +70,7 @@ AngularNotes now uses the Supabase project AngularNotes for email/password authe
 - A device-local, account-specific cache supports quick loading and recovery during temporary connection failures. It stores only notes owned by that account; shared notes are re-authorized and fetched from Supabase on sign-in. Normal edits sync to Supabase automatically, and Realtime updates refresh other open sessions.
 - Configure Supabase Auth URL settings so the Site URL and allowed redirect URL include https://bradleysouciercomputer.github.io/AngularNotes/. Email confirmation and password reset links return to the GitHub Pages app.
 - Export JSON backups remain available from the More options menu.
+- Desktop reminder preferences and notification delivery markers are stored locally per account and browser; note reminder dates themselves sync with your cloud notes.
 
 
 ## Shared notes and collaboration
