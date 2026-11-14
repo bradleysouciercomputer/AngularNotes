@@ -1,0 +1,41 @@
+<div class="viewer-heading">
+  <div class="viewer-title-wrap">
+    <h2 mat-dialog-title>{{ data.title || 'Untitled note' }}</h2>
+    <span class="viewer-access"><mat-icon>visibility</mat-icon> Viewer access</span>
+  </div>
+  <button mat-icon-button mat-dialog-close aria-label="Close note">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+
+<mat-dialog-content class="viewer-content">
+  @if (data.tags.length) {
+    <mat-chip-set aria-label="Note labels" class="viewer-tags">
+      @for (tag of data.tags; track tag) { <mat-chip>{{ tag }}</mat-chip> }
+    </mat-chip-set>
+  }
+
+  @if (data.reminderDate) {
+    <div class="viewer-reminder"><mat-icon>notifications_active</mat-icon><span>{{ data.reminderDate | date:'MMM d, y':'UTC' }}</span></div>
+  }
+
+  @if (data.type === 'checklist') {
+    <div class="viewer-checklist">
+      @for (item of data.checklistItems; track item.id) {
+        <div class="viewer-checklist-item">
+          <mat-icon>{{ item.checked ? 'check_box' : 'check_box_outline_blank' }}</mat-icon>
+          <span [class.viewer-item-complete]="item.checked">{{ item.text }}</span>
+        </div>
+      }
+      @if (!data.checklistItems.length) { <p class="viewer-empty">This checklist has no items.</p> }
+    </div>
+  } @else {
+    <div class="viewer-note-text">{{ data.content || 'This note is empty.' }}</div>
+  }
+
+  <div class="viewer-updated">Last edited {{ data.updatedAt | date:'medium' }}</div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Close</button>
+</mat-dialog-actions>

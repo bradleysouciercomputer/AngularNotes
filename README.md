@@ -71,7 +71,7 @@ AngularNotes now uses the Supabase project AngularNotes for email/password authe
 ## Shared notes and collaboration
 
 - Open a note's actions menu and choose **Manage access** to add collaborators by email.
-- **Viewer** access allows reading and copying the note. **Editor** access allows changing the shared note; the owner remains the owner.
+- **Viewer** access opens the complete note in a read-only view and allows copying it. **Editor** access allows changing the shared note; the owner remains the owner.
 - Collaborators sign in to AngularNotes using the exact invited email address, then find the note in **Shared with me**.
 - Owners can change roles or revoke access. Collaborators can remove a note from their own Shared with me collection.
 - Collaboration permissions are enforced by Postgres row-level security. Shared editor saves update the owner's record without reassigning ownership.

@@ -22,6 +22,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { Note, NoteDraft, NoteEditorDialogComponent } from './note-editor-dialog.component';
 import { SupabaseService } from './supabase.service';
 import { NoteSharingDialogComponent } from './note-sharing-dialog.component';
+import { NoteViewerDialogComponent } from './note-viewer-dialog.component';
 
 export type NoteView = 'all' | 'recent' | 'favorites' | 'pinned' | 'reminders' | 'archive' | 'trash' | 'shared';
 export type SortMode = 'updated' | 'updated-asc' | 'created' | 'created-asc' | 'title' | 'title-desc' | 'reminder' | 'manual';
@@ -930,7 +931,14 @@ export class AppComponent {
 
   editNote(note: Note): void {
     if (!this.canEditNote(note)) {
-      this.snackBar.open('You have viewer access to this note.', 'Dismiss', { duration: 2500 });
+      this.dialog.open(NoteViewerDialogComponent, {
+        data: note,
+        width: '620px',
+        maxWidth: 'calc(100vw - 28px)',
+        autoFocus: false,
+        restoreFocus: true,
+        panelClass: 'angularnotes-viewer-panel'
+      });
       return;
     }
     this.openEditor({
