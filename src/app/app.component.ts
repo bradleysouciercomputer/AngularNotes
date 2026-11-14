@@ -24,7 +24,7 @@ import { SupabaseService } from './supabase.service';
 import { NoteSharingDialogComponent } from './note-sharing-dialog.component';
 import { NoteViewerDialogComponent } from './note-viewer-dialog.component';
 
-export type NoteView = 'all' | 'recent' | 'favorites' | 'pinned' | 'reminders' | 'archive' | 'trash' | 'shared';
+export type NoteView = 'all' | 'recent' | 'favorites' | 'pinned' | 'reminders' | 'today' | 'upcoming' | 'archive' | 'trash' | 'shared';
 export type SortMode = 'updated' | 'updated-asc' | 'created' | 'created-asc' | 'title' | 'title-desc' | 'reminder' | 'manual';
 export type NoteTypeFilter = 'all' | 'text' | 'checklist';
 
@@ -148,6 +148,7 @@ export class AppComponent {
   readonly authMessage = signal('');
   readonly cloudStatus = signal<'loading' | 'saving' | 'saved' | 'error' | 'idle'>('loading');
   readonly cloudSyncReady = signal(false);
+  readonly desktopRemindersEnabled = signal(false);
   private activeUserId: string | null | undefined;
   private activatingUserId: string | null | undefined;
   private authGeneration = 0;
@@ -191,7 +192,7 @@ export class AppComponent {
     if (tag) return tag;
     return ({
       all: 'Notes', recent: 'Recent', favorites: 'Favorites',
-      pinned: 'Pinned', reminders: 'Reminders', archive: 'Archive', trash: 'Trash', shared: 'Shared with me'
+      pinned: 'Pinned', reminders: 'Reminders', today: 'Today', upcoming: 'Upcoming', archive: 'Archive', trash: 'Trash', shared: 'Shared with me'
     })[this.activeView()];
   });
 
@@ -201,6 +202,11 @@ export class AppComponent {
     const typeFilter = this.noteTypeFilter();
     const query = this.searchTerm().trim().toLocaleLowerCase();
     const currentUserId = this.currentUser()?.id;
+    const today = this.localDateString();
+    const upcomingLimitDate = new Date();
+    upcomingLimitDate.setHours(12, 0, 0, 0);
+    upcomingLimitDate.setDate(upcomingLimitDate.getDate() + 7);
+    const upcomingLimit = this.localDateString(upcomingLimitDate);
     const filtered = this.notes().filter((note) => {
       const isShared = Boolean(note.ownerId && note.ownerId !== currentUserId);
       if (selectedView === 'shared') {
@@ -221,6 +227,8 @@ export class AppComponent {
       if (typeFilter === 'text' && note.type !== 'text') return false;
       if (typeFilter === 'checklist' && note.type !== 'checklist') return false;
       if (selectedView === 'reminders' && !note.reminderDate) return false;
+      if (selectedView === 'today' && (!note.reminderDate || note.reminderDate > today)) return false;
+      if (selectedView === 'upcoming' && (!note.reminderDate || note.reminderDate <= today || note.reminderDate > upcomingLimit)) return false;
       if (selectedView === 'favorites' && !note.favorite) return false;
       if (selectedView === 'pinned' && !note.pinned) return false;
       if (selectedView === 'recent' && Date.now() - note.updatedAt > 1000 * 60 * 60 * 24 * 14) return false;
@@ -234,7 +242,7 @@ export class AppComponent {
       if (mode === 'reminder') {
         return (a.reminderDate || '9999-12-31').localeCompare(b.reminderDate || '9999-12-31');
       }
-      if (selectedView === 'reminders') return (a.reminderDate || '').localeCompare(b.reminderDate || '');
+      if (selectedView === 'reminders' || selectedView === 'today' || selectedView === 'upcoming') return (a.reminderDate || '').localeCompare(b.reminderDate || '');
       if (mode === 'title') return a.title.localeCompare(b.title);
       if (mode === 'title-desc') return b.title.localeCompare(a.title);
       if (mode === 'created') return b.createdAt - a.createdAt;
@@ -324,6 +332,7 @@ export class AppComponent {
       }, 450);
     });
 
+    if (typeof window !== 'undefined') window.setInterval(() => this.checkDueReminders(), 60_000);
     void this.initializeAuth();
   }
 
@@ -371,6 +380,7 @@ export class AppComponent {
     this.realtimeReloadTimer = null;
     this.cloudSyncReady.set(false);
     this.currentUser.set(user);
+    this.desktopRemindersEnabled.set(user ? this.readDesktopReminderPreference(user.id) : false);
 
     if (this.notesChannel) {
       void this.supabase.client.removeChannel(this.notesChannel);
@@ -431,6 +441,7 @@ export class AppComponent {
       localStorage.removeItem(STORAGE_KEY);
       this.cloudStatus.set('saved');
       this.cloudSyncReady.set(true);
+      this.checkDueReminders();
       this.notesChannel = this.supabase.subscribeToNotes(user.id, () => this.scheduleCloudReload(user.id));
     } catch (error) {
       if (generation !== this.authGeneration) return;
@@ -594,6 +605,18 @@ export class AppComponent {
     if (view === 'favorites') return notes.filter((note) => note.favorite && !note.archived && !note.trashed).length;
     if (view === 'pinned') return notes.filter((note) => note.pinned && !note.archived && !note.trashed).length;
     if (view === 'reminders') return notes.filter((note) => Boolean(note.reminderDate) && !note.archived && !note.trashed).length;
+    if (view === 'today') {
+      const today = this.localDateString();
+      return notes.filter((note) => Boolean(note.reminderDate && note.reminderDate <= today) && !note.archived && !note.trashed).length;
+    }
+    if (view === 'upcoming') {
+      const today = this.localDateString();
+      const limitDate = new Date();
+      limitDate.setHours(12, 0, 0, 0);
+      limitDate.setDate(limitDate.getDate() + 7);
+      const limit = this.localDateString(limitDate);
+      return notes.filter((note) => Boolean(note.reminderDate && note.reminderDate > today && note.reminderDate <= limit) && !note.archived && !note.trashed).length;
+    }
     if (view === 'recent') return notes.filter((note) => !note.archived && !note.trashed && Date.now() - note.updatedAt <= 1000 * 60 * 60 * 24 * 14).length;
     return notes.filter((note) => !note.archived && !note.trashed).length;
   }
@@ -997,6 +1020,112 @@ export class AppComponent {
 
   isReminderToday(note: Note): boolean {
     return Boolean(note.reminderDate && note.reminderDate === this.localDateString());
+  }
+
+  snoozeReminder(note: Note, days: 1 | 7): void {
+    const date = new Date();
+    date.setHours(12, 0, 0, 0);
+    date.setDate(date.getDate() + days);
+    const reminderDate = this.localDateString(date);
+    this.patchNote(note.id, { reminderDate });
+    this.snackBar.open(days === 1 ? 'Reminder snoozed until tomorrow' : 'Reminder snoozed for one week', 'Dismiss', { duration: 2200 });
+  }
+
+  private desktopReminderPreferenceKey(userId: string): string {
+    return 'angularnotes.desktop-reminders.' + userId;
+  }
+
+  private desktopReminderSentKey(userId: string): string {
+    return 'angularnotes.desktop-reminders-sent.' + userId;
+  }
+
+  private readDesktopReminderPreference(userId: string): boolean {
+    try {
+      return localStorage.getItem(this.desktopReminderPreferenceKey(userId)) === 'true';
+    } catch {
+      return false;
+    }
+  }
+
+  async toggleDesktopReminders(): Promise<void> {
+    const user = this.currentUser();
+    if (!user) return;
+    if (this.desktopRemindersEnabled()) {
+      this.desktopRemindersEnabled.set(false);
+      try { localStorage.setItem(this.desktopReminderPreferenceKey(user.id), 'false'); } catch { /* Preference remains off for this session. */ }
+      this.snackBar.open('Desktop reminders turned off', 'Dismiss', { duration: 1800 });
+      return;
+    }
+
+    if (typeof Notification === 'undefined') {
+      this.snackBar.open('This browser does not support desktop notifications.', 'Dismiss', { duration: 3500 });
+      return;
+    }
+
+    try {
+      const permission = Notification.permission === 'granted'
+        ? 'granted'
+        : await Notification.requestPermission();
+      if (permission !== 'granted') {
+        this.snackBar.open(
+          permission === 'denied'
+            ? 'Notifications are blocked for this site. Allow them in your browser settings to enable reminders.'
+            : 'Notification permission was not granted.',
+          'Dismiss',
+          { duration: 5000 }
+        );
+        return;
+      }
+      this.desktopRemindersEnabled.set(true);
+      try { localStorage.setItem(this.desktopReminderPreferenceKey(user.id), 'true'); } catch { /* Setting stays enabled for this session. */ }
+      this.checkDueReminders();
+      this.snackBar.open('Desktop reminders enabled. This tab must be open for reminders to appear.', 'Dismiss', { duration: 3500 });
+    } catch {
+      this.snackBar.open('Could not enable desktop notifications in this browser.', 'Dismiss', { duration: 3500 });
+    }
+  }
+
+  private checkDueReminders(): void {
+    const user = this.currentUser();
+    if (!user || !this.desktopRemindersEnabled() || typeof Notification === 'undefined' || Notification.permission !== 'granted') return;
+
+    const today = this.localDateString();
+    let sent: string[] = [];
+    try {
+      const raw = localStorage.getItem(this.desktopReminderSentKey(user.id));
+      const parsed: unknown = raw ? JSON.parse(raw) : [];
+      if (Array.isArray(parsed)) sent = parsed.filter((item): item is string => typeof item === 'string');
+    } catch {
+      sent = [];
+    }
+    const sentSet = new Set(sent);
+    let changed = false;
+
+    for (const note of this.notes()) {
+      if ((note.ownerId && note.ownerId !== user.id) || note.archived || note.trashed || !note.reminderDate || note.reminderDate > today) continue;
+      const marker = note.id + '|' + note.reminderDate;
+      if (sentSet.has(marker)) continue;
+      try {
+        const notification = new Notification(note.title || 'AngularNotes reminder', {
+          body: note.reminderDate === today ? 'This note is due today.' : 'This reminder is overdue.',
+          tag: 'angularnotes-' + note.id
+        });
+        notification.onclick = () => {
+          window.focus();
+          const current = this.notes().find((item) => item.id === note.id);
+          if (current) this.editNote(current);
+          notification.close();
+        };
+        sentSet.add(marker);
+        changed = true;
+      } catch {
+        // Leave the reminder unmarked so a later check can try again.
+      }
+    }
+
+    if (changed) {
+      try { localStorage.setItem(this.desktopReminderSentKey(user.id), JSON.stringify(Array.from(sentSet))); } catch { /* Notifications still work for this session. */ }
+    }
   }
 
   toggleChecklistItem(note: Note, itemId: string, checked: boolean): void {
