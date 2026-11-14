@@ -771,3 +771,44 @@
   line-height: 1.2;
   white-space: nowrap;
 }
+
+.reminder-summary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px 24px;
+  margin: -2px 0 18px;
+  padding: 12px 16px;
+  border: 1px solid #e8eaed;
+  border-radius: 10px;
+  background: #fafafa;
+}
+.reminder-summary-stat {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  color: #5f6368;
+  font-size: 12px;
+}
+.reminder-summary-stat mat-icon {
+  width: 18px;
+  height: 18px;
+  color: #5f6368;
+  font-size: 18px;
+}
+.reminder-summary-stat strong {
+  color: #202124;
+  font-size: 15px;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+}
+.reminder-summary p {
+  flex: 1 1 220px;
+  margin: 0;
+  color: #80868b;
+  font-size: 11px;
+}
+@media (max-width: 600px) {
+  .reminder-summary { gap: 10px 16px; padding: 11px 12px; }
+  .reminder-summary p { flex-basis: 100%; }
+}
