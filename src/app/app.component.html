@@ -83,6 +83,16 @@
         <mat-icon matListItemIcon>push_pin</mat-icon>
         <span matListItemTitle>Pinned</span>
       </button>
+      <button mat-list-item (click)="setView('today')" [class.nav-selected]="activeView() === 'today'" matTooltip="Due today and overdue" matTooltipPosition="right">
+        <mat-icon matListItemIcon>today</mat-icon>
+        <span matListItemTitle>Today</span>
+        <span matListItemMeta class="nav-count" *ngIf="count('today') > 0">{{ count('today') }}</span>
+      </button>
+      <button mat-list-item (click)="setView('upcoming')" [class.nav-selected]="activeView() === 'upcoming'" matTooltip="Next seven days" matTooltipPosition="right">
+        <mat-icon matListItemIcon>event_upcoming</mat-icon>
+        <span matListItemTitle>Upcoming</span>
+        <span matListItemMeta class="nav-count" *ngIf="count('upcoming') > 0">{{ count('upcoming') }}</span>
+      </button>
       <button mat-list-item (click)="setView('reminders')" [class.nav-selected]="activeView() === 'reminders'" matTooltip="Reminders" matTooltipPosition="right">
         <mat-icon matListItemIcon>notifications_active</mat-icon>
         <span matListItemTitle>Reminders</span>
@@ -160,6 +170,11 @@
         <mat-icon>more_vert</mat-icon>
       </button>
       <mat-menu #appMenu="matMenu">
+        <button mat-menu-item (click)="toggleDesktopReminders()">
+          <mat-icon>{{ desktopRemindersEnabled() ? 'notifications_off' : 'notifications_active' }}</mat-icon>
+          <span>{{ desktopRemindersEnabled() ? 'Turn off desktop reminders' : 'Enable desktop reminders' }}</span>
+        </button>
+        <mat-divider></mat-divider>
         <button mat-menu-item (click)="exportNotes()"><mat-icon>download</mat-icon><span>Export JSON backup</span></button>
         <button mat-menu-item (click)="exportVisibleMarkdown()"><mat-icon>description</mat-icon><span>Export visible notes as Markdown</span></button>
         <button mat-menu-item (click)="importPicker.click()"><mat-icon>upload_file</mat-icon><span>Import backup</span></button>
@@ -229,6 +244,20 @@
             Empty trash
           </button>
         </div>
+      </section>
+
+      <section class="reminder-summary" *ngIf="activeView() === 'today' || activeView() === 'upcoming'">
+        <div class="reminder-summary-stat">
+          <mat-icon>notifications_active</mat-icon>
+          <strong>{{ count('today') }}</strong>
+          <span>due or overdue</span>
+        </div>
+        <div class="reminder-summary-stat">
+          <mat-icon>event_upcoming</mat-icon>
+          <strong>{{ count('upcoming') }}</strong>
+          <span>in the next 7 days</span>
+        </div>
+        <p>Choose a note's menu to snooze its reminder until tomorrow or next week.</p>
       </section>
 
       <div class="type-filter-row">
@@ -349,6 +378,8 @@
               <button mat-menu-item *ngIf="!note.trashed && canEditNote(note) && !isSharedNote(note)" (click)="moveNoteToTop(note)"><mat-icon>vertical_align_top</mat-icon><span>Move to top</span></button>
               <button mat-menu-item *ngIf="!note.trashed && canEditNote(note) && !isSharedNote(note)" (click)="moveNoteToBottom(note)"><mat-icon>vertical_align_bottom</mat-icon><span>Move to bottom</span></button>
               <button mat-menu-item *ngIf="!note.trashed" (click)="downloadNoteMarkdown(note)"><mat-icon>download</mat-icon><span>Download as Markdown</span></button>
+              <button mat-menu-item *ngIf="!note.trashed && note.reminderDate && canEditNote(note)" (click)="snoozeReminder(note, 1)"><mat-icon>snooze</mat-icon><span>Snooze until tomorrow</span></button>
+              <button mat-menu-item *ngIf="!note.trashed && note.reminderDate && canEditNote(note)" (click)="snoozeReminder(note, 7)"><mat-icon>event_repeat</mat-icon><span>Snooze for one week</span></button>
               <button mat-menu-item *ngIf="!note.trashed && note.reminderDate && canEditNote(note)" (click)="clearReminder(note)"><mat-icon>notifications_off</mat-icon><span>Remove reminder</span></button>
               <button mat-menu-item *ngIf="!note.trashed && canEditNote(note)" (click)="togglePinned(note)"><mat-icon>{{ note.pinned ? 'keep_off' : 'push_pin' }}</mat-icon><span>{{ note.pinned ? 'Unpin note' : 'Pin note' }}</span></button>
               <button mat-menu-item *ngIf="!note.trashed && canEditNote(note)" (click)="toggleArchive(note)"><mat-icon>{{ note.archived ? 'unarchive' : 'archive' }}</mat-icon><span>{{ note.archived ? 'Remove from archive' : 'Archive' }}</span></button>
@@ -413,8 +444,8 @@
       <ng-template #emptyState>
         <section class="empty-state">
           <mat-icon class="empty-icon">{{ searchTerm() ? 'search_off' : activeView() === 'trash' ? 'delete_outline' : activeView() === 'favorites' ? 'favorite_border' : 'lightbulb' }}</mat-icon>
-          <h2>{{ searchTerm() ? 'No notes found' : activeView() === 'shared' ? 'Nothing shared with you yet' : activeView() === 'trash' ? 'Trash is empty' : activeView() === 'favorites' ? 'No favorites yet' : activeView() === 'pinned' ? 'No pinned notes' : activeView() === 'reminders' ? 'No reminders set' : activeView() === 'archive' ? 'Nothing in your archive' : 'Notes you add appear here' }}</h2>
-          <p>{{ searchTerm() ? 'Try another search term.' : activeView() === 'shared' ? 'Notes shared with your email address will appear here.' : activeView() === 'trash' ? 'Deleted notes will appear here.' : activeView() === 'favorites' ? 'Favorite a note to find it here.' : activeView() === 'pinned' ? 'Pin a note to keep it close.' : activeView() === 'reminders' ? 'Add a reminder date to any note to see it here.' : activeView() === 'archive' ? 'Archive notes you want to keep for later.' : 'Capture an idea, a list, or anything you want to remember.' }}</p>
+          <h2>{{ searchTerm() ? 'No notes found' : activeView() === 'shared' ? 'Nothing shared with you yet' : activeView() === 'trash' ? 'Trash is empty' : activeView() === 'favorites' ? 'No favorites yet' : activeView() === 'pinned' ? 'No pinned notes' : activeView() === 'today' ? 'Nothing due today' : activeView() === 'upcoming' ? 'No upcoming reminders' : activeView() === 'reminders' ? 'No reminders set' : activeView() === 'archive' ? 'Nothing in your archive' : 'Notes you add appear here' }}</h2>
+          <p>{{ searchTerm() ? 'Try another search term.' : activeView() === 'shared' ? 'Notes shared with your email address will appear here.' : activeView() === 'trash' ? 'Deleted notes will appear here.' : activeView() === 'favorites' ? 'Favorite a note to find it here.' : activeView() === 'pinned' ? 'Pin a note to keep it close.' : activeView() === 'today' ? 'Notes with overdue or today reminders appear here.' : activeView() === 'upcoming' ? 'Notes due in the next seven days appear here.' : activeView() === 'reminders' ? 'Add a reminder date to any note to see it here.' : activeView() === 'archive' ? 'Archive notes you want to keep for later.' : 'Capture an idea, a list, or anything you want to remember.' }}</p>
           <button *ngIf="!searchTerm() && activeView() === 'all'" mat-flat-button color="primary" (click)="createNote()">Create note</button>
           <button *ngIf="searchTerm()" mat-button (click)="setSearchTerm('')">Clear search</button>
         </section>
