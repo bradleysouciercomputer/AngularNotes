@@ -1,4 +1,5 @@
 import { CommonModule, DatePipe } from '@angular/common';
+import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { Component, HostListener, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { MatButtonModule } from '@angular/material/button';
@@ -20,7 +21,7 @@ import { MatTooltipModule } from '@angular/material/tooltip';
 import { Note, NoteDraft, NoteEditorDialogComponent } from './note-editor-dialog.component';
 
 export type NoteView = 'all' | 'recent' | 'favorites' | 'pinned' | 'reminders' | 'archive' | 'trash';
-export type SortMode = 'updated' | 'updated-asc' | 'created' | 'created-asc' | 'title' | 'title-desc' | 'reminder';
+export type SortMode = 'updated' | 'updated-asc' | 'created' | 'created-asc' | 'title' | 'title-desc' | 'reminder' | 'manual';
 export type NoteTypeFilter = 'all' | 'text' | 'checklist';
 
 const STORAGE_KEY = 'angularnotes.notes.v1';
@@ -107,7 +108,7 @@ function readStoredNotes(): Note[] {
   selector: 'app-root',
   standalone: true,
   imports: [
-    CommonModule, DatePipe, FormsModule, MatButtonModule, MatCardModule, MatCheckboxModule, MatChipsModule,
+    CommonModule, DatePipe, DragDropModule, FormsModule, MatButtonModule, MatCardModule, MatCheckboxModule, MatChipsModule,
     MatDialogModule, MatDividerModule, MatFormFieldModule, MatIconModule, MatInputModule,
     MatListModule, MatMenuModule, MatSelectModule, MatSidenavModule, MatSnackBarModule,
     MatToolbarModule, MatTooltipModule
@@ -190,6 +191,7 @@ export class AppComponent {
       return this.matchesSearch(note, query);
     });
     const mode = this.sortMode();
+    if (mode === 'manual') return filtered;
     return filtered.sort((a, b) => {
       if (mode === 'reminder') {
         return (a.reminderDate || '9999-12-31').localeCompare(b.reminderDate || '9999-12-31');
@@ -463,6 +465,47 @@ export class AppComponent {
       });
   }
 
+  canReorderNotes(): boolean {
+    return this.sortMode() === 'manual' && this.activeView() !== 'trash' && !this.selectionMode();
+  }
+
+  dropNote(event: CdkDragDrop<Note[]>): void {
+    if (!this.canReorderNotes() || event.previousIndex === event.currentIndex) return;
+    const reorderedVisible = [...this.visibleNotes()];
+    moveItemInArray(reorderedVisible, event.previousIndex, event.currentIndex);
+    const visibleIds = new Set(reorderedVisible.map((note) => note.id));
+    let nextVisibleIndex = 0;
+    this.notes.update((current) => current.map((note) =>
+      visibleIds.has(note.id) ? reorderedVisible[nextVisibleIndex++] : note
+    ));
+    this.snackBar.open('Note order updated', 'Dismiss', { duration: 1400 });
+  }
+
+  moveNoteToTop(note: Note): void {
+    this.moveNoteInCollection(note.id, 'top');
+  }
+
+  moveNoteToBottom(note: Note): void {
+    this.moveNoteInCollection(note.id, 'bottom');
+  }
+
+  private moveNoteInCollection(noteId: string, destination: 'top' | 'bottom'): void {
+    const current = this.notes();
+    const index = current.findIndex((note) => note.id === noteId);
+    if (index < 0) return;
+    const reordered = [...current];
+    const [note] = reordered.splice(index, 1);
+    if (destination === 'top') reordered.unshift(note);
+    else reordered.push(note);
+    this.notes.set(reordered);
+    this.sortMode.set('manual');
+    this.snackBar.open(
+      destination === 'top' ? 'Moved note to the top' : 'Moved note to the bottom',
+      'Dismiss',
+      { duration: 1600 }
+    );
+  }
+
   filterByTag(tag: string): void {
     this.activeView.set('all');
     this.activeTag.set(tag);
@@ -503,7 +546,7 @@ export class AppComponent {
     });
   }
 
-  createFromTemplate(template: 'meeting' | 'journal' | 'project' | 'shopping'): void {
+  createFromTemplate(template: 'meeting' | 'journal' | 'project' | 'shopping' | 'recipe' | 'reading' | 'travel'): void {
     const now = Date.now();
     const note: Note = {
       id: this.makeId(), title: '', content: '', tags: [], color: '#ffffff',
@@ -526,7 +569,7 @@ export class AppComponent {
       note.content = 'Goal\n\nMilestones\n1. \n2. \n3. \n\nPeople and resources\n\nRisks or blockers\n\nNext steps';
       note.tags = ['Work', 'Projects'];
       note.color = '#e6f4ea';
-    } else {
+    } else if (template === 'shopping') {
       note.title = 'Shopping list';
       note.type = 'checklist';
       note.checklistItems = ['Produce', 'Pantry', 'Household'].map((text) => ({
@@ -534,6 +577,24 @@ export class AppComponent {
       }));
       note.tags = ['Shopping'];
       note.color = '#fef1e1';
+    } else if (template === 'recipe') {
+      note.title = 'Recipe';
+      note.content = 'Description\n\nPrep time\n\nCook time\n\nServings\n\nIngredients\n• \n\nInstructions\n1. \n2. \n3. \n\nNotes and variations';
+      note.tags = ['Recipes'];
+      note.color = '#fce8e6';
+    } else if (template === 'reading') {
+      note.title = 'Reading list';
+      note.type = 'checklist';
+      note.checklistItems = ['Want to read', 'Currently reading', 'Finished'].map((text) => ({
+        id: this.makeId('item'), text, checked: false
+      }));
+      note.tags = ['Reading'];
+      note.color = '#f3e8fd';
+    } else {
+      note.title = 'Travel plan';
+      note.content = 'Destination\n\nTravel dates\n\nConfirmation numbers\n\nPlaces to visit\n• \n\nThings to pack\n• \n\nTravel notes';
+      note.tags = ['Travel'];
+      note.color = '#e4f7f5';
     }
     this.openEditor(note);
   }
@@ -785,6 +846,11 @@ export class AppComponent {
   trackByChecklistItem(_index: number, item: { id: string }): string { return item.id; }
   completedChecklistCount(note: Note): number {
     return (note.checklistItems || []).filter((item) => item.checked).length;
+  }
+
+  checklistProgress(note: Note): number {
+    const total = note.checklistItems?.length || 0;
+    return total ? Math.round((this.completedChecklistCount(note) / total) * 100) : 0;
   }
 
   showStorageInfo(): void {

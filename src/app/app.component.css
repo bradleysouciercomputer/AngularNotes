@@ -665,3 +665,51 @@
   }
   .type-filter-row mat-chip-listbox { width: 100%; }
 }
+
+
+/* Manual drag-and-drop note ordering */
+.note-drag-handle {
+  flex: 0 0 32px;
+  width: 32px;
+  height: 32px;
+  color: #80868b;
+  cursor: grab;
+  opacity: 0;
+  touch-action: none;
+  transition: opacity .15s ease;
+}
+.note-drag-handle:active { cursor: grabbing; }
+.note-card:hover .note-drag-handle,
+.note-drag-handle:focus-visible { opacity: 1; }
+.note-card.cdk-drag-preview {
+  border-color: #1a73e8 !important;
+  box-shadow: 0 5px 16px rgba(60, 64, 67, .22) !important;
+}
+.note-card.cdk-drag-placeholder {
+  opacity: .35;
+  border: 1px dashed #1a73e8 !important;
+  box-shadow: none !important;
+}
+.notes-grid.cdk-drop-list-dragging .note-card:not(.cdk-drag-placeholder) {
+  transition: transform 160ms ease;
+}
+
+/* Checklist completion progress */
+.checklist-progress-track {
+  width: calc(100% - 10px);
+  height: 4px;
+  margin: 5px 5px 3px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: rgba(60, 64, 67, .13);
+}
+.checklist-progress-track span {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: #188038;
+  transition: width .2s ease;
+}
+@media (max-width: 700px) {
+  .note-drag-handle { opacity: 1; }
+}

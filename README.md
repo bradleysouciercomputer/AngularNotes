@@ -10,17 +10,18 @@ AngularNotes is a clean, responsive note-taking app built with **Angular 22** an
 - Organize notes into Recent, Archive, and Trash views
 - Restore notes from Trash or permanently delete them
 - Filter between all notes, text notes, and checklists
-- Sort by newest or oldest edits, newest or oldest creation, title in either direction, or reminder date
+- Sort by newest or oldest edits, newest or oldest creation, title in either direction, reminder date, or your own manual order
+- Drag notes to reorder them in Manual order, or move an individual note to the top or bottom from its menu
 - Switch between grid and list layouts
 - Choose from a set of soft note colors
-- Check off checklist items directly from the notes grid
+- Check off checklist items directly from the notes grid and track completion with a progress bar
 - Duplicate notes or copy note text to the clipboard
 - Filter notes by label from the sidebar or directly from note cards
 - Select multiple notes at once to toggle favorites and pins, change colors, clear reminders, archive, restore, delete with Undo, copy, duplicate, or export selected notes
 - Share notes with the device or browser share sheet when supported, with copy-to-clipboard fallback
 - Download individual notes or the current filtered view as Markdown
 - Use keyboard shortcuts: Ctrl/⌘ + N for a note, Ctrl/⌘ + Shift + L for a checklist, and Ctrl/⌘ + K to search
-- Create notes from Meeting, Daily journal, Project plan, and Shopping list templates
+- Create notes from Meeting, Daily journal, Project plan, Shopping list, Recipe, Reading list, and Travel plan templates
 - Set a reminder date on any note with Today, Tomorrow, and Next week quick presets
 - View live word and character counts while editing, and save with Ctrl/⌘ + Enter
 - See overdue and due-today reminder indicators on note cards; reminder dates are local in-app dates and do not send device notifications

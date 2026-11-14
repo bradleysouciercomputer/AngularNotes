@@ -110,6 +110,9 @@
         <button mat-menu-item (click)="createFromTemplate('journal')"><mat-icon>auto_stories</mat-icon><span>Daily journal</span></button>
         <button mat-menu-item (click)="createFromTemplate('project')"><mat-icon>view_kanban</mat-icon><span>Project plan</span></button>
         <button mat-menu-item (click)="createFromTemplate('shopping')"><mat-icon>shopping_cart</mat-icon><span>Shopping list</span></button>
+        <button mat-menu-item (click)="createFromTemplate('recipe')"><mat-icon>restaurant_menu</mat-icon><span>Recipe</span></button>
+        <button mat-menu-item (click)="createFromTemplate('reading')"><mat-icon>menu_book</mat-icon><span>Reading list</span></button>
+        <button mat-menu-item (click)="createFromTemplate('travel')"><mat-icon>flight</mat-icon><span>Travel plan</span></button>
       </mat-menu>
 
       <section class="notes-toolbar">
@@ -128,6 +131,7 @@
               <mat-option value="title">Title A–Z</mat-option>
               <mat-option value="title-desc">Title Z–A</mat-option>
               <mat-option value="reminder">Reminder date</mat-option>
+              <mat-option value="manual">Manual order</mat-option>
             </mat-select>
           </mat-form-field>
           <button
@@ -211,14 +215,34 @@
         </button>
       </section>
 
-      <section class="notes-grid" [class.list-mode]="layoutMode() === 'list'" *ngIf="visibleNotes().length > 0; else emptyState">
+      <section
+        class="notes-grid"
+        [class.list-mode]="layoutMode() === 'list'"
+        cdkDropList
+        [cdkDropListData]="visibleNotes()"
+        [cdkDropListDisabled]="!canReorderNotes()"
+        [cdkDropListOrientation]="layoutMode() === 'grid' ? 'mixed' : 'vertical'"
+        (cdkDropListDropped)="dropNote($event)"
+        *ngIf="visibleNotes().length > 0; else emptyState">
         <mat-card
           class="note-card"
           appearance="outlined"
+          cdkDrag
+          [cdkDragDisabled]="!canReorderNotes()"
+          [cdkDragData]="note"
           *ngFor="let note of visibleNotes(); trackBy: trackById"
           [class.note-selected]="selectionMode() && isNoteSelected(note.id)"
           [style.background-color]="note.color || '#ffffff'">
           <div class="note-card-top">
+            <button
+              *ngIf="canReorderNotes()"
+              mat-icon-button
+              class="note-drag-handle"
+              cdkDragHandle
+              matTooltip="Drag to reorder"
+              [attr.aria-label]="'Drag ' + (note.title || 'Untitled note') + ' to reorder'">
+              <mat-icon>drag_indicator</mat-icon>
+            </button>
             <mat-checkbox
               *ngIf="selectionMode()"
               class="note-select-checkbox"
@@ -242,6 +266,8 @@
               <button mat-menu-item *ngIf="!note.trashed" (click)="copyNote(note)"><mat-icon>content_copy</mat-icon><span>Copy note text</span></button>
               <button mat-menu-item *ngIf="!note.trashed" (click)="shareNote(note)"><mat-icon>share</mat-icon><span>Share note…</span></button>
               <button mat-menu-item *ngIf="!note.trashed" (click)="duplicateNote(note)"><mat-icon>file_copy</mat-icon><span>Make a copy</span></button>
+              <button mat-menu-item *ngIf="!note.trashed" (click)="moveNoteToTop(note)"><mat-icon>vertical_align_top</mat-icon><span>Move to top</span></button>
+              <button mat-menu-item *ngIf="!note.trashed" (click)="moveNoteToBottom(note)"><mat-icon>vertical_align_bottom</mat-icon><span>Move to bottom</span></button>
               <button mat-menu-item *ngIf="!note.trashed" (click)="downloadNoteMarkdown(note)"><mat-icon>download</mat-icon><span>Download as Markdown</span></button>
               <button mat-menu-item *ngIf="!note.trashed && note.reminderDate" (click)="clearReminder(note)"><mat-icon>notifications_off</mat-icon><span>Remove reminder</span></button>
               <button mat-menu-item *ngIf="!note.trashed" (click)="togglePinned(note)"><mat-icon>{{ note.pinned ? 'keep_off' : 'push_pin' }}</mat-icon><span>{{ note.pinned ? 'Unpin note' : 'Pin note' }}</span></button>
@@ -266,6 +292,15 @@
               (change)="toggleChecklistItem(note, item.id, $event.checked)">
               <span [class.checklist-complete]="item.checked">{{ item.text }}</span>
             </mat-checkbox>
+            <div
+              class="checklist-progress-track"
+              role="progressbar"
+              [attr.aria-valuemin]="0"
+              [attr.aria-valuemax]="note.checklistItems.length"
+              [attr.aria-valuenow]="completedChecklistCount(note)"
+              [attr.aria-label]="completedChecklistCount(note) + ' of ' + note.checklistItems.length + ' checklist items completed'">
+              <span [style.width.%]="checklistProgress(note)"></span>
+            </div>
             <span class="checklist-progress">
               {{ completedChecklistCount(note) }} of {{ note.checklistItems.length }} completed
             </span>
