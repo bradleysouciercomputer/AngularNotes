@@ -66,3 +66,13 @@ AngularNotes now uses the Supabase project AngularNotes for email/password authe
 - A device-local, account-specific cache supports quick loading and recovery during temporary connection failures. Normal edits sync to Supabase automatically, and Realtime updates refresh other open sessions.
 - Configure Supabase Auth URL settings so the Site URL and allowed redirect URL include https://bradleysouciercomputer.github.io/AngularNotes/. Email confirmation and password reset links return to the GitHub Pages app.
 - Export JSON backups remain available from the More options menu.
+
+
+## Shared notes and collaboration
+
+- Open a note's actions menu and choose **Manage access** to add collaborators by email.
+- **Viewer** access allows reading and copying the note. **Editor** access allows changing the shared note; the owner remains the owner.
+- Collaborators sign in to AngularNotes using the exact invited email address, then find the note in **Shared with me**.
+- Owners can change roles or revoke access. Collaborators can remove a note from their own Shared with me collection.
+- Collaboration permissions are enforced by Postgres row-level security. Shared editor saves update the owner's record without reassigning ownership.
+- The current invitation flow grants access by email but does not send a separate email notification. The recipient must already have an AngularNotes account or create one using that same email address.

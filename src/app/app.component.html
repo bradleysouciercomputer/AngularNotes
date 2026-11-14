@@ -102,6 +102,11 @@
         <span matListItemTitle>Trash</span>
         <span matListItemMeta class="nav-count" *ngIf="count('trash') > 0">{{ count('trash') }}</span>
       </button>
+      <button mat-list-item (click)="setView('shared')" [class.nav-selected]="activeView() === 'shared'" matTooltip="Shared with me" matTooltipPosition="right">
+        <mat-icon matListItemIcon>group</mat-icon>
+        <span matListItemTitle>Shared with me</span>
+        <span matListItemMeta class="nav-count" *ngIf="count('shared') > 0">{{ count('shared') }}</span>
+      </button>
     </mat-nav-list>
 
     <div class="sidebar-label" *ngIf="availableTags().length > 0">LABELS</div>
@@ -167,7 +172,7 @@
     </mat-toolbar>
 
     <main class="workspace">
-      <div class="quick-note-shell">
+      <div class="quick-note-shell" *ngIf="activeView() !== 'shared'">
         <button mat-button class="quick-note" (click)="createNote()">
           <span>Take a note...</span>
         </button>
@@ -209,7 +214,7 @@
           </mat-form-field>
           <button
             mat-icon-button
-            *ngIf="activeView() !== 'trash'"
+            *ngIf="activeView() !== 'trash' && activeView() !== 'shared'"
             class="select-mode-toggle"
             [class.select-mode-active]="selectionMode()"
             (click)="toggleSelectionMode()"
@@ -327,27 +332,29 @@
               <mat-icon>push_pin</mat-icon>
             </span>
             <span class="note-archived" *ngIf="note.archived && !note.trashed">Archived</span>
+            <span class="note-shared-role" *ngIf="isSharedNote(note)">Shared · {{ note.shareRole === 'editor' ? 'Editor' : 'Viewer' }}</span>
             <span class="card-actions-spacer"></span>
-            <button mat-icon-button class="card-action" *ngIf="!note.trashed" (click)="toggleFavorite(note)" [matTooltip]="note.favorite ? 'Remove from favorites' : 'Add to favorites'" [attr.aria-label]="note.favorite ? 'Remove from favorites' : 'Add to favorites'">
+            <button mat-icon-button class="card-action" *ngIf="!note.trashed && canEditNote(note)" (click)="toggleFavorite(note)" [matTooltip]="note.favorite ? 'Remove from favorites' : 'Add to favorites'" [attr.aria-label]="note.favorite ? 'Remove from favorites' : 'Add to favorites'">
               <mat-icon [class.favorite-active]="note.favorite">{{ note.favorite ? 'favorite' : 'favorite_border' }}</mat-icon>
             </button>
             <button mat-icon-button class="card-action" [matMenuTriggerFor]="noteMenu" aria-label="Note actions">
               <mat-icon>more_vert</mat-icon>
             </button>
             <mat-menu #noteMenu="matMenu">
-              <button mat-menu-item *ngIf="!note.trashed" (click)="editNote(note)"><mat-icon>edit</mat-icon><span>Edit note</span></button>
+              <button mat-menu-item *ngIf="!note.trashed && canEditNote(note)" (click)="editNote(note)"><mat-icon>edit</mat-icon><span>Edit note</span></button>
               <button mat-menu-item *ngIf="!note.trashed" (click)="copyNote(note)"><mat-icon>content_copy</mat-icon><span>Copy note text</span></button>
-              <button mat-menu-item *ngIf="!note.trashed" (click)="shareNote(note)"><mat-icon>share</mat-icon><span>Share note…</span></button>
+              <button mat-menu-item *ngIf="canManageSharing(note)" (click)="shareNote(note)"><mat-icon>group_add</mat-icon><span>Manage access…</span></button>
+              <button mat-menu-item *ngIf="isSharedNote(note)" (click)="leaveSharedNote(note)"><mat-icon>link_off</mat-icon><span>Remove from Shared with me</span></button>
               <button mat-menu-item *ngIf="!note.trashed" (click)="duplicateNote(note)"><mat-icon>file_copy</mat-icon><span>Make a copy</span></button>
               <button mat-menu-item *ngIf="!note.trashed" (click)="moveNoteToTop(note)"><mat-icon>vertical_align_top</mat-icon><span>Move to top</span></button>
               <button mat-menu-item *ngIf="!note.trashed" (click)="moveNoteToBottom(note)"><mat-icon>vertical_align_bottom</mat-icon><span>Move to bottom</span></button>
               <button mat-menu-item *ngIf="!note.trashed" (click)="downloadNoteMarkdown(note)"><mat-icon>download</mat-icon><span>Download as Markdown</span></button>
               <button mat-menu-item *ngIf="!note.trashed && note.reminderDate" (click)="clearReminder(note)"><mat-icon>notifications_off</mat-icon><span>Remove reminder</span></button>
-              <button mat-menu-item *ngIf="!note.trashed" (click)="togglePinned(note)"><mat-icon>{{ note.pinned ? 'keep_off' : 'push_pin' }}</mat-icon><span>{{ note.pinned ? 'Unpin note' : 'Pin note' }}</span></button>
-              <button mat-menu-item *ngIf="!note.trashed" (click)="toggleArchive(note)"><mat-icon>{{ note.archived ? 'unarchive' : 'archive' }}</mat-icon><span>{{ note.archived ? 'Remove from archive' : 'Archive' }}</span></button>
+              <button mat-menu-item *ngIf="!note.trashed && canEditNote(note)" (click)="togglePinned(note)"><mat-icon>{{ note.pinned ? 'keep_off' : 'push_pin' }}</mat-icon><span>{{ note.pinned ? 'Unpin note' : 'Pin note' }}</span></button>
+              <button mat-menu-item *ngIf="!note.trashed && canEditNote(note)" (click)="toggleArchive(note)"><mat-icon>{{ note.archived ? 'unarchive' : 'archive' }}</mat-icon><span>{{ note.archived ? 'Remove from archive' : 'Archive' }}</span></button>
               <button mat-menu-item *ngIf="note.trashed" (click)="restoreNote(note)"><mat-icon>restore_from_trash</mat-icon><span>Restore</span></button>
-              <button mat-menu-item *ngIf="note.trashed" class="delete-menu-item" (click)="permanentlyDelete(note)"><mat-icon>delete_forever</mat-icon><span>Delete forever</span></button>
-              <button mat-menu-item *ngIf="!note.trashed" class="delete-menu-item" (click)="moveToTrash(note)"><mat-icon>delete_outline</mat-icon><span>Delete note</span></button>
+              <button mat-menu-item *ngIf="note.trashed && !isSharedNote(note)" class="delete-menu-item" (click)="permanentlyDelete(note)"><mat-icon>delete_forever</mat-icon><span>Delete forever</span></button>
+              <button mat-menu-item *ngIf="!note.trashed && canEditNote(note)" class="delete-menu-item" (click)="moveToTrash(note)"><mat-icon>delete_outline</mat-icon><span>Delete note</span></button>
             </mat-menu>
           </div>
 
@@ -405,8 +412,8 @@
       <ng-template #emptyState>
         <section class="empty-state">
           <mat-icon class="empty-icon">{{ searchTerm() ? 'search_off' : activeView() === 'trash' ? 'delete_outline' : activeView() === 'favorites' ? 'favorite_border' : 'lightbulb' }}</mat-icon>
-          <h2>{{ searchTerm() ? 'No notes found' : activeView() === 'trash' ? 'Trash is empty' : activeView() === 'favorites' ? 'No favorites yet' : activeView() === 'pinned' ? 'No pinned notes' : activeView() === 'reminders' ? 'No reminders set' : activeView() === 'archive' ? 'Nothing in your archive' : 'Notes you add appear here' }}</h2>
-          <p>{{ searchTerm() ? 'Try another search term.' : activeView() === 'trash' ? 'Deleted notes will appear here.' : activeView() === 'favorites' ? 'Favorite a note to find it here.' : activeView() === 'pinned' ? 'Pin a note to keep it close.' : activeView() === 'reminders' ? 'Add a reminder date to any note to see it here.' : activeView() === 'archive' ? 'Archive notes you want to keep for later.' : 'Capture an idea, a list, or anything you want to remember.' }}</p>
+          <h2>{{ searchTerm() ? 'No notes found' : activeView() === 'shared' ? 'Nothing shared with you yet' : activeView() === 'trash' ? 'Trash is empty' : activeView() === 'favorites' ? 'No favorites yet' : activeView() === 'pinned' ? 'No pinned notes' : activeView() === 'reminders' ? 'No reminders set' : activeView() === 'archive' ? 'Nothing in your archive' : 'Notes you add appear here' }}</h2>
+          <p>{{ searchTerm() ? 'Try another search term.' : activeView() === 'shared' ? 'Notes shared with your email address will appear here.' : activeView() === 'trash' ? 'Deleted notes will appear here.' : activeView() === 'favorites' ? 'Favorite a note to find it here.' : activeView() === 'pinned' ? 'Pin a note to keep it close.' : activeView() === 'reminders' ? 'Add a reminder date to any note to see it here.' : activeView() === 'archive' ? 'Archive notes you want to keep for later.' : 'Capture an idea, a list, or anything you want to remember.' }}</p>
           <button *ngIf="!searchTerm() && activeView() === 'all'" mat-flat-button color="primary" (click)="createNote()">Create note</button>
           <button *ngIf="searchTerm()" mat-button (click)="setSearchTerm('')">Clear search</button>
         </section>

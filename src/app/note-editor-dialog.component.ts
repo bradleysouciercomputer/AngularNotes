@@ -24,6 +24,8 @@ export interface Note {
   createdAt: number;
   updatedAt: number;
   reminderDate?: string;
+  ownerId?: string;
+  shareRole?: 'owner' | 'editor' | 'viewer';
 }
 
 export type NoteDraft = Pick<Note, 'title' | 'content' | 'tags' | 'color' | 'type' | 'checklistItems' | 'pinned' | 'favorite' | 'reminderDate'>;

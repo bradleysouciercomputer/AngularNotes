@@ -758,3 +758,16 @@
 @media (max-width: 700px) {
   .note-drag-handle { opacity: 1; }
 }
+
+
+.note-shared-role {
+  align-self: center;
+  margin-left: 7px;
+  padding: 3px 7px;
+  border-radius: 999px;
+  color: #5f6368;
+  background: rgba(60, 64, 67, .08);
+  font-size: 10px;
+  line-height: 1.2;
+  white-space: nowrap;
+}

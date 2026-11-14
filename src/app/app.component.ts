@@ -21,8 +21,9 @@ import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Note, NoteDraft, NoteEditorDialogComponent } from './note-editor-dialog.component';
 import { SupabaseService } from './supabase.service';
+import { NoteSharingDialogComponent } from './note-sharing-dialog.component';
 
-export type NoteView = 'all' | 'recent' | 'favorites' | 'pinned' | 'reminders' | 'archive' | 'trash';
+export type NoteView = 'all' | 'recent' | 'favorites' | 'pinned' | 'reminders' | 'archive' | 'trash' | 'shared';
 export type SortMode = 'updated' | 'updated-asc' | 'created' | 'created-asc' | 'title' | 'title-desc' | 'reminder' | 'manual';
 export type NoteTypeFilter = 'all' | 'text' | 'checklist';
 
@@ -94,6 +95,8 @@ function normalizeNotes(parsed: unknown): Note[] {
     archived: Boolean(item.archived),
     trashed: Boolean(item.trashed),
     reminderDate: typeof item.reminderDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(item.reminderDate) ? item.reminderDate : undefined,
+    ownerId: typeof item.ownerId === 'string' ? item.ownerId : undefined,
+    shareRole: item.shareRole === 'viewer' || item.shareRole === 'editor' || item.shareRole === 'owner' ? item.shareRole : undefined,
     createdAt: Number(item.createdAt) || Date.now(),
     updatedAt: Number(item.updatedAt) || Date.now()
   }));
@@ -185,7 +188,7 @@ export class AppComponent {
     if (tag) return tag;
     return ({
       all: 'Notes', recent: 'Recent', favorites: 'Favorites',
-      pinned: 'Pinned', reminders: 'Reminders', archive: 'Archive', trash: 'Trash'
+      pinned: 'Pinned', reminders: 'Reminders', archive: 'Archive', trash: 'Trash', shared: 'Shared with me'
     })[this.activeView()];
   });
 
@@ -194,7 +197,14 @@ export class AppComponent {
     const selectedTag = this.activeTag();
     const typeFilter = this.noteTypeFilter();
     const query = this.searchTerm().trim().toLocaleLowerCase();
+    const currentUserId = this.currentUser()?.id;
     const filtered = this.notes().filter((note) => {
+      const isShared = Boolean(note.ownerId && note.ownerId !== currentUserId);
+      if (selectedView === 'shared') {
+        if (!isShared) return false;
+      } else if (isShared) {
+        return false;
+      }
       if (selectedView === 'trash') {
         if (!note.trashed) return false;
       } else {
@@ -383,7 +393,7 @@ export class AppComponent {
       if (!hasUserCache && !hasLegacyCache) cachedNotes = [];
       this.notes.set(cachedNotes.length ? cachedNotes : (hasUserCache || hasLegacyCache ? [] : starterNotes()));
 
-      const remoteNotes = await this.supabase.loadNotes();
+      const remoteNotes = await this.supabase.loadNotes(user.id);
       if (generation !== this.authGeneration || this.currentUser()?.id !== user.id) return;
 
       let mergedNotes: Note[];
@@ -465,7 +475,7 @@ export class AppComponent {
       this.realtimeReloadTimer = null;
       if (this.currentUser()?.id !== userId || !this.cloudSyncReady() || this.cloudSaveTimer) return;
       try {
-        const remoteNotes = await this.supabase.loadNotes();
+        const remoteNotes = await this.supabase.loadNotes(userId);
         if (this.currentUser()?.id !== userId || this.cloudSaveTimer) return;
         const remoteSnapshot = JSON.stringify(remoteNotes);
         if (remoteSnapshot !== JSON.stringify(this.notes())) {
@@ -571,7 +581,8 @@ export class AppComponent {
 
   count(view: NoteView): number {
     const notes = this.notes();
-    if (view === 'trash') return notes.filter((note) => note.trashed).length;
+    if (view === 'shared') return notes.filter((note) => Boolean(note.ownerId && note.ownerId !== this.currentUser()?.id) && !note.trashed).length;
+    if (view === 'trash') return notes.filter((note) => note.trashed && (!note.ownerId || note.ownerId === this.currentUser()?.id)).length;
     if (view === 'archive') return notes.filter((note) => note.archived && !note.trashed).length;
     if (view === 'favorites') return notes.filter((note) => note.favorite && !note.archived && !note.trashed).length;
     if (view === 'pinned') return notes.filter((note) => note.pinned && !note.archived && !note.trashed).length;
@@ -598,7 +609,7 @@ export class AppComponent {
   }
 
   toggleSelectionMode(): void {
-    if (this.activeView() === 'trash') return;
+    if (this.activeView() === 'trash' || this.activeView() === 'shared') return;
     if (this.selectionMode()) {
       this.clearSelectionMode();
     } else {
@@ -701,8 +712,10 @@ export class AppComponent {
     const selected = this.selectedNotes();
     if (!selected.length) return;
     const now = Date.now();
-    const copies = selected.map((note) => ({
-      ...note,
+    const copies = selected.map((note) => {
+      const { ownerId: _ownerId, shareRole: _shareRole, ...copySource } = note;
+      return {
+      ...copySource,
       id: this.makeId(),
       title: note.title.trim() ? note.title.trim() + ' (copy)' : 'Untitled note (copy)',
       checklistItems: (note.checklistItems || []).map((item) => ({ ...item, id: this.makeId('item') })),
@@ -712,7 +725,8 @@ export class AppComponent {
       trashed: false,
       createdAt: now,
       updatedAt: now
-    }));
+      };
+    });
     this.notes.update((current) => [...copies, ...current]);
     this.activeView.set('all');
     this.activeTag.set(null);
@@ -769,7 +783,7 @@ export class AppComponent {
   }
 
   canReorderNotes(): boolean {
-    return this.sortMode() === 'manual' && this.activeView() !== 'trash' && !this.selectionMode();
+    return this.sortMode() === 'manual' && this.activeView() !== 'trash' && this.activeView() !== 'shared' && !this.selectionMode();
   }
 
   dropNote(event: CdkDragDrop<Note[]>): void {
@@ -902,7 +916,23 @@ export class AppComponent {
     this.openEditor(note);
   }
 
+  canEditNote(note: Note): boolean {
+    return !note.ownerId || note.ownerId === this.currentUser()?.id || note.shareRole === 'editor';
+  }
+
+  isSharedNote(note: Note): boolean {
+    return Boolean(note.ownerId && note.ownerId !== this.currentUser()?.id);
+  }
+
+  canManageSharing(note: Note): boolean {
+    return !this.isSharedNote(note) && !note.trashed;
+  }
+
   editNote(note: Note): void {
+    if (!this.canEditNote(note)) {
+      this.snackBar.open('You have viewer access to this note.', 'Dismiss', { duration: 2500 });
+      return;
+    }
     this.openEditor({
       ...note,
       tags: [...note.tags],
@@ -926,7 +956,7 @@ export class AppComponent {
         tags: draft.tags, updatedAt: Date.now()
       };
       this.notes.update((current) => [saved, ...current.filter((item) => item.id !== saved.id)]);
-      this.activeView.set('all');
+      this.activeView.set(this.isSharedNote(saved) ? 'shared' : 'all');
       this.snackBar.open('Note saved', 'Dismiss', { duration: 1800 });
     });
   }
@@ -962,8 +992,9 @@ export class AppComponent {
 
   duplicateNote(note: Note): void {
     const now = Date.now();
+    const { ownerId: _ownerId, shareRole: _shareRole, ...copySource } = note;
     const copy: Note = {
-      ...note,
+      ...copySource,
       id: this.makeId(),
       title: note.title.trim() ? note.title.trim() + ' (copy)' : 'Untitled note (copy)',
       checklistItems: (note.checklistItems || []).map((item) => ({ ...item, id: this.makeId('item') })),
@@ -995,18 +1026,37 @@ export class AppComponent {
     }
   }
 
-  async shareNote(note: Note): Promise<void> {
-    const title = note.title || 'AngularNotes note';
-    const text = this.plainTextForNote(note);
-    if (typeof navigator.share !== 'function') {
-      await this.copyNote(note);
-      return;
-    }
+  shareNote(note: Note): void {
+    const user = this.currentUser();
+    if (!user || !this.canManageSharing(note)) return;
+    const ref = this.dialog.open(NoteSharingDialogComponent, {
+      data: { note, ownerId: user.id, currentEmail: user.email || '' },
+      width: '520px',
+      maxWidth: 'calc(100vw - 28px)',
+      autoFocus: 'first-tabbable',
+      restoreFocus: true,
+      panelClass: 'angularnotes-sharing-panel'
+    });
+    ref.afterClosed().subscribe(async (changed) => {
+      if (!changed || !this.currentUser()) return;
+      try {
+        const refreshed = await this.supabase.loadNotes(user.id);
+        this.lastSyncedSnapshot = JSON.stringify(refreshed);
+        this.notes.set(refreshed);
+      } catch {
+        this.snackBar.open('Access was updated, but the note list could not refresh yet.', 'Dismiss', { duration: 3500 });
+      }
+    });
+  }
+
+  async leaveSharedNote(note: Note): Promise<void> {
+    if (!this.isSharedNote(note) || !note.ownerId) return;
     try {
-      await navigator.share({ title, text });
+      await this.supabase.leaveNoteShare(note.ownerId, note.id);
+      this.notes.update((current) => current.filter((item) => item.id !== note.id));
+      this.snackBar.open('Note removed from Shared with me', 'Dismiss', { duration: 2200 });
     } catch (error) {
-      if (error instanceof DOMException && error.name === 'AbortError') return;
-      this.snackBar.open('Sharing is unavailable here. Try Copy note text instead.', 'Dismiss', { duration: 3000 });
+      this.snackBar.open(error instanceof Error ? error.message : 'Could not leave this shared note.', 'Dismiss', { duration: 3500 });
     }
   }
 
@@ -1028,6 +1078,10 @@ export class AppComponent {
   }
 
   permanentlyDelete(note: Note): void {
+    if (this.isSharedNote(note)) {
+      void this.leaveSharedNote(note);
+      return;
+    }
     this.notes.update((current) => current.filter((item) => item.id !== note.id));
     this.snackBar.open('Note permanently deleted', 'Dismiss', { duration: 1800 });
   }
@@ -1040,6 +1094,11 @@ export class AppComponent {
   }
 
   private patchNote(id: string, changes: Partial<Note>): void {
+    const target = this.notes().find((note) => note.id === id);
+    if (target && !this.canEditNote(target)) {
+      this.snackBar.open('You have viewer access to this note.', 'Dismiss', { duration: 2500 });
+      return;
+    }
     this.notes.update((current) => current.map((note) =>
       note.id === id ? { ...note, ...changes, updatedAt: Date.now() } : note
     ));
