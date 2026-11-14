@@ -63,7 +63,7 @@ AngularNotes now uses the Supabase project AngularNotes for email/password authe
 - Notes are stored in the public.notes table and protected by row-level security. Each signed-in account can access only rows whose user_id matches its authenticated Supabase user ID.
 - The browser app uses the Supabase publishable key only. A service-role key must never be added to this public GitHub Pages repository.
 - Existing browser notes are merged into the signed-in account on first login. Notes with newer local timestamps are preferred during the initial merge; cloud-only notes are kept.
-- A device-local, account-specific cache supports quick loading and recovery during temporary connection failures. Normal edits sync to Supabase automatically, and Realtime updates refresh other open sessions.
+- A device-local, account-specific cache supports quick loading and recovery during temporary connection failures. It stores only notes owned by that account; shared notes are re-authorized and fetched from Supabase on sign-in. Normal edits sync to Supabase automatically, and Realtime updates refresh other open sessions.
 - Configure Supabase Auth URL settings so the Site URL and allowed redirect URL include https://bradleysouciercomputer.github.io/AngularNotes/. Email confirmation and password reset links return to the GitHub Pages app.
 - Export JSON backups remain available from the More options menu.
 

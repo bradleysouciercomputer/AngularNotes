@@ -174,7 +174,9 @@ export class AppComponent {
   );
   readonly availableTags = computed(() => {
     const tags = new Set<string>();
+    const currentUserId = this.currentUser()?.id;
     for (const note of this.notes()) {
+      if (note.ownerId && note.ownerId !== currentUserId) continue;
       if (note.trashed || note.archived) continue;
       for (const tag of note.tags) {
         const cleaned = tag.trim();
@@ -299,7 +301,8 @@ export class AppComponent {
       const notes = this.notes();
       if (!user || !ready) return;
       try {
-        localStorage.setItem(this.userStorageKey(user.id), JSON.stringify(notes));
+        const ownedNotes = notes.filter((note) => !note.ownerId || note.ownerId === user.id);
+        localStorage.setItem(this.userStorageKey(user.id), JSON.stringify(ownedNotes));
       } catch {
         this.snackBar.open('This device could not update its local note cache. Your cloud notes remain available.', 'Dismiss', { duration: 5000 });
       }
@@ -390,7 +393,8 @@ export class AppComponent {
       const cacheKey = this.userStorageKey(user.id);
       const hasUserCache = localStorage.getItem(cacheKey) !== null;
       const hasLegacyCache = localStorage.getItem(STORAGE_KEY) !== null;
-      cachedNotes = this.readCachedNotes(hasUserCache ? cacheKey : STORAGE_KEY);
+      cachedNotes = this.readCachedNotes(hasUserCache ? cacheKey : STORAGE_KEY)
+        .filter((note) => !note.ownerId || note.ownerId === user.id);
       if (!hasUserCache && !hasLegacyCache) cachedNotes = [];
       this.notes.set(cachedNotes.length ? cachedNotes : (hasUserCache || hasLegacyCache ? [] : starterNotes()));
 
@@ -581,9 +585,11 @@ export class AppComponent {
   }
 
   count(view: NoteView): number {
-    const notes = this.notes();
-    if (view === 'shared') return notes.filter((note) => Boolean(note.ownerId && note.ownerId !== this.currentUser()?.id) && !note.trashed).length;
-    if (view === 'trash') return notes.filter((note) => note.trashed && (!note.ownerId || note.ownerId === this.currentUser()?.id)).length;
+    const allNotes = this.notes();
+    const currentUserId = this.currentUser()?.id;
+    if (view === 'shared') return allNotes.filter((note) => Boolean(note.ownerId && note.ownerId !== currentUserId) && !note.trashed).length;
+    const notes = allNotes.filter((note) => !note.ownerId || note.ownerId === currentUserId);
+    if (view === 'trash') return notes.filter((note) => note.trashed).length;
     if (view === 'archive') return notes.filter((note) => note.archived && !note.trashed).length;
     if (view === 'favorites') return notes.filter((note) => note.favorite && !note.archived && !note.trashed).length;
     if (view === 'pinned') return notes.filter((note) => note.pinned && !note.archived && !note.trashed).length;
@@ -832,7 +838,9 @@ export class AppComponent {
   }
 
   tagCount(tag: string): number {
+    const currentUserId = this.currentUser()?.id;
     return this.notes().filter((note) =>
+      (!note.ownerId || note.ownerId === currentUserId) &&
       !note.archived && !note.trashed &&
       note.tags.some((item) => item.toLocaleLowerCase() === tag.toLocaleLowerCase())
     ).length;
