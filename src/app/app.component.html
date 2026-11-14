@@ -86,6 +86,7 @@
         <button mat-menu-item (click)="exportVisibleMarkdown()"><mat-icon>description</mat-icon><span>Export visible notes as Markdown</span></button>
         <button mat-menu-item (click)="importPicker.click()"><mat-icon>upload_file</mat-icon><span>Import backup</span></button>
         <mat-divider></mat-divider>
+        <button mat-menu-item (click)="showSearchTips()"><mat-icon>manage_search</mat-icon><span>Search tips</span></button>
         <button mat-menu-item (click)="showKeyboardShortcuts()"><mat-icon>keyboard</mat-icon><span>Keyboard shortcuts</span></button>
         <button mat-menu-item (click)="showStorageInfo()"><mat-icon>info</mat-icon><span>Storage &amp; privacy</span></button>
       </mat-menu>
@@ -193,6 +194,15 @@
         <button mat-button (click)="bulkClearReminders()" [disabled]="selectedReminderCount() === 0">
           <mat-icon>notifications_off</mat-icon> Clear reminders
         </button>
+        <button mat-button [matMenuTriggerFor]="bulkMoreMenu" [disabled]="selectedNoteIds().length === 0">
+          <mat-icon>more_horiz</mat-icon> More
+        </button>
+        <mat-menu #bulkMoreMenu="matMenu">
+          <button mat-menu-item (click)="copySelectedNotes()"><mat-icon>content_copy</mat-icon><span>Copy selected text</span></button>
+          <button mat-menu-item (click)="duplicateSelectedNotes()"><mat-icon>file_copy</mat-icon><span>Duplicate selected</span></button>
+          <button mat-menu-item (click)="exportSelectedMarkdown()"><mat-icon>description</mat-icon><span>Export selected as Markdown</span></button>
+          <button mat-menu-item (click)="exportSelectedJson()"><mat-icon>download</mat-icon><span>Export selected as JSON</span></button>
+        </mat-menu>
         <button mat-button class="bulk-delete" (click)="bulkTrash()" [disabled]="selectedNoteIds().length === 0">
           <mat-icon>delete_outline</mat-icon> Delete
         </button>

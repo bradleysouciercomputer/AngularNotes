@@ -5,7 +5,7 @@ AngularNotes is a clean, responsive note-taking app built with **Angular 22** an
 ## Features
 
 - Create and edit text notes or interactive checklists with a title and comma-separated labels
-- Search note titles, note content, tags, reminder dates, and checklist items
+- Search note titles, note content, tags, reminder dates, and checklist items; use operators such as `tag:work`, `type:checklist`, `is:pinned`, and `has:reminder`
 - Pin important notes and add notes to Favorites
 - Organize notes into Recent, Archive, and Trash views
 - Restore notes from Trash or permanently delete them
@@ -16,12 +16,13 @@ AngularNotes is a clean, responsive note-taking app built with **Angular 22** an
 - Check off checklist items directly from the notes grid
 - Duplicate notes or copy note text to the clipboard
 - Filter notes by label from the sidebar or directly from note cards
-- Select multiple notes at once to toggle favorites and pins, change colors, clear reminders, archive, restore, or delete them
+- Select multiple notes at once to toggle favorites and pins, change colors, clear reminders, archive, restore, delete with Undo, copy, duplicate, or export selected notes
 - Share notes with the device or browser share sheet when supported, with copy-to-clipboard fallback
 - Download individual notes or the current filtered view as Markdown
 - Use keyboard shortcuts: Ctrl/⌘ + N for a note, Ctrl/⌘ + Shift + L for a checklist, and Ctrl/⌘ + K to search
 - Create notes from Meeting, Daily journal, Project plan, and Shopping list templates
-- Set a reminder date on any note and review dated notes in the Reminders view
+- Set a reminder date on any note with Today, Tomorrow, and Next week quick presets
+- View live word and character counts while editing, and save with Ctrl/⌘ + Enter
 - See overdue and due-today reminder indicators on note cards; reminder dates are local in-app dates and do not send device notifications
 - Reorder completed checklist items or clear them in one action
 - Import and export notes as JSON backups

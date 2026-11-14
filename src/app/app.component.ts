@@ -187,9 +187,7 @@ export class AppComponent {
       if (selectedView === 'recent' && Date.now() - note.updatedAt > 1000 * 60 * 60 * 24 * 14) return false;
       if (selectedTag && !note.tags.some((tag) => tag.toLocaleLowerCase() === selectedTag.toLocaleLowerCase())) return false;
       if (!query) return true;
-      const checklistText = (note.checklistItems || []).map((item) => item.text).join(' ');
-      return [note.title, note.content, checklistText, note.reminderDate || '', ...note.tags]
-        .join(' ').toLocaleLowerCase().includes(query);
+      return this.matchesSearch(note, query);
     });
     const mode = this.sortMode();
     return filtered.sort((a, b) => {
@@ -205,6 +203,50 @@ export class AppComponent {
       return b.updatedAt - a.updatedAt;
     });
   });
+
+  private matchesSearch(note: Note, query: string): boolean {
+    const tokens = query.match(/"[^"]+"|'[^']+'|\S+/g) || [];
+    const textTerms: string[] = [];
+    const tagTerms: string[] = [];
+    let requiredType: NoteTypeFilter = 'all';
+    let requiresPinned = false;
+    let requiresFavorite = false;
+    let requiresReminder = false;
+    let requiresChecklist = false;
+
+    for (const rawToken of tokens) {
+      const token = rawToken.replace(/^["']|["']$/g, '');
+      if (token.startsWith('tag:') && token.length > 4) {
+        tagTerms.push(token.slice(4));
+      } else if (token.startsWith('type:')) {
+        const type = token.slice(5);
+        if (type === 'text' || type === 'checklist') requiredType = type;
+        else textTerms.push(token);
+      } else if (token === 'is:pinned') {
+        requiresPinned = true;
+      } else if (token === 'is:favorite') {
+        requiresFavorite = true;
+      } else if (token === 'has:reminder') {
+        requiresReminder = true;
+      } else if (token === 'has:checklist') {
+        requiresChecklist = true;
+      } else {
+        textTerms.push(token);
+      }
+    }
+
+    if (requiredType !== 'all' && note.type !== requiredType) return false;
+    if (requiresPinned && !note.pinned) return false;
+    if (requiresFavorite && !note.favorite) return false;
+    if (requiresReminder && !note.reminderDate) return false;
+    if (requiresChecklist && note.type !== 'checklist') return false;
+    if (tagTerms.some((term) => !note.tags.some((tag) => tag.toLocaleLowerCase().includes(term)))) return false;
+
+    const checklistText = (note.checklistItems || []).map((item) => item.text).join(' ');
+    const haystack = [note.title, note.content, checklistText, note.reminderDate || '', ...note.tags]
+      .join(' ').toLocaleLowerCase();
+    return textTerms.every((term) => haystack.includes(term));
+  }
 
   readonly allVisibleSelected = computed(() => {
     const visible = this.visibleNotes();
@@ -338,12 +380,87 @@ export class AppComponent {
       { duration: 2200 }
     );
   }
+  async copySelectedNotes(): Promise<void> {
+    const notes = this.selectedNotes();
+    if (!notes.length) return;
+    const text = notes.map((note) => this.plainTextForNote(note)).join('\n\n──────────\n\n');
+    try {
+      await navigator.clipboard.writeText(text);
+      this.snackBar.open('Copied ' + notes.length + ' notes', 'Dismiss', { duration: 2000 });
+    } catch {
+      this.snackBar.open('Clipboard access is unavailable in this browser.', 'Dismiss', { duration: 3000 });
+    }
+  }
+
+  duplicateSelectedNotes(): void {
+    const selected = this.selectedNotes();
+    if (!selected.length) return;
+    const now = Date.now();
+    const copies = selected.map((note) => ({
+      ...note,
+      id: this.makeId(),
+      title: note.title.trim() ? note.title.trim() + ' (copy)' : 'Untitled note (copy)',
+      checklistItems: (note.checklistItems || []).map((item) => ({ ...item, id: this.makeId('item') })),
+      pinned: false,
+      favorite: false,
+      archived: false,
+      trashed: false,
+      createdAt: now,
+      updatedAt: now
+    }));
+    this.notes.update((current) => [...copies, ...current]);
+    this.activeView.set('all');
+    this.activeTag.set(null);
+    this.searchTerm.set('');
+    this.noteTypeFilter.set('all');
+    this.clearSelectionMode();
+    this.snackBar.open('Duplicated ' + copies.length + ' notes', 'Dismiss', { duration: 2200 });
+  }
+
+  exportSelectedMarkdown(): void {
+    const notes = this.selectedNotes();
+    if (!notes.length) return;
+    const markdown = notes.map((note) => this.markdownForNote(note)).join('\n---\n\n');
+    const date = new Date().toISOString().slice(0, 10);
+    this.downloadText(markdown, 'angularnotes-selected-' + date + '.md', 'text/markdown;charset=utf-8');
+    this.snackBar.open('Exported ' + notes.length + ' selected notes as Markdown', 'Dismiss', { duration: 2200 });
+  }
+
+  exportSelectedJson(): void {
+    const notes = this.selectedNotes();
+    if (!notes.length) return;
+    const date = new Date().toISOString().slice(0, 10);
+    this.downloadText(
+      JSON.stringify(notes, null, 2),
+      'angularnotes-selected-' + date + '.json',
+      'application/json;charset=utf-8'
+    );
+    this.snackBar.open('Exported ' + notes.length + ' selected notes as JSON', 'Dismiss', { duration: 2200 });
+  }
+
   bulkArchive(): void {
     const archived = this.activeView() !== 'archive';
     this.applyBulkChanges({ archived }, archived ? 'Archived {count} notes' : 'Restored {count} notes from archive');
   }
   bulkTrash(): void {
-    this.applyBulkChanges({ trashed: true, archived: false }, 'Moved {count} notes to trash');
+    const selected = this.selectedNotes();
+    if (!selected.length) return;
+    const selectedIds = new Set(selected.map((note) => note.id));
+    const previousById = new Map(selected.map((note) => [note.id, note]));
+    const now = Date.now();
+    this.notes.update((current) => current.map((note) =>
+      selectedIds.has(note.id) ? { ...note, trashed: true, archived: false, updatedAt: now } : note
+    ));
+    this.clearSelectionMode();
+    this.snackBar.open('Moved ' + selected.length + ' notes to trash', 'Undo', { duration: 5000 })
+      .onAction().subscribe(() => {
+        const restoredAt = Date.now();
+        this.notes.update((current) => current.map((note) => {
+          const previous = previousById.get(note.id);
+          return previous ? { ...previous, updatedAt: restoredAt } : note;
+        }));
+        this.snackBar.open('Restored ' + selected.length + ' notes', 'Dismiss', { duration: 1800 });
+      });
   }
 
   filterByTag(tag: string): void {
@@ -672,6 +789,14 @@ export class AppComponent {
 
   showStorageInfo(): void {
     this.snackBar.open('Your notes are stored in this browser on this device. Use Export notes to create a backup.', 'Got it', { duration: 5000 });
+  }
+
+  showSearchTips(): void {
+    this.snackBar.open(
+      'Search operators: tag:work · type:checklist · type:text · is:pinned · is:favorite · has:reminder · has:checklist. Combine them with normal words.',
+      'Got it',
+      { duration: 8000 }
+    );
   }
 
   showKeyboardShortcuts(): void {

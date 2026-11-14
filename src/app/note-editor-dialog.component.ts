@@ -62,6 +62,30 @@ export class NoteEditorDialogComponent {
   favorite = this.data.favorite;
   reminderDate = this.data.reminderDate || '';
 
+  get wordCount(): number {
+    const text = this.type === 'checklist'
+      ? this.checklistItems.map((item) => item.text).join(' ')
+      : this.content;
+    const trimmed = text.trim();
+    return trimmed ? trimmed.split(/\s+/).length : 0;
+  }
+
+  get characterCount(): number {
+    return this.type === 'checklist'
+      ? this.checklistItems.reduce((total, item) => total + item.text.length, 0)
+      : this.content.length;
+  }
+
+  setReminderPreset(daysFromToday: number): void {
+    const date = new Date();
+    date.setHours(12, 0, 0, 0);
+    date.setDate(date.getDate() + daysFromToday);
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const day = String(date.getDate()).padStart(2, '0');
+    this.reminderDate = year + '-' + month + '-' + day;
+  }
+
   addChecklistItem(): void {
     this.checklistItems = [...this.checklistItems, {
       id: typeof crypto !== 'undefined' && 'randomUUID' in crypto

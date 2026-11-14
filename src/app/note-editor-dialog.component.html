@@ -5,7 +5,7 @@
   </button>
 </div>
 
-<mat-dialog-content class="editor-content">
+<mat-dialog-content class="editor-content" (keydown.control.enter)="save(); $event.preventDefault()" (keydown.meta.enter)="save(); $event.preventDefault()">
   <div class="editor-type-switch" role="group" aria-label="Note type">
     <button mat-button type="button" [class.type-active]="type === 'text'" (click)="type = 'text'">
       <mat-icon>notes</mat-icon> Text
@@ -45,6 +45,14 @@
     </button>
   </mat-form-field>
 
+  <div class="reminder-presets" aria-label="Quick reminder dates">
+    <span>Quick set:</span>
+    <button mat-button type="button" (click)="setReminderPreset(0)">Today</button>
+    <button mat-button type="button" (click)="setReminderPreset(1)">Tomorrow</button>
+    <button mat-button type="button" (click)="setReminderPreset(7)">Next week</button>
+    <button mat-button type="button" *ngIf="reminderDate" (click)="reminderDate = ''">Clear</button>
+  </div>
+
   <mat-form-field appearance="outline" class="tags-field">
     <mat-label>Labels</mat-label>
     <input matInput [(ngModel)]="tagsText" name="tags" placeholder="Work, Ideas, Personal">
@@ -71,6 +79,12 @@
   <div class="editor-options">
     <mat-checkbox [(ngModel)]="pinned" name="pinned" color="primary">Pin note</mat-checkbox>
     <mat-checkbox [(ngModel)]="favorite" name="favorite" color="primary">Add to favorites</mat-checkbox>
+  </div>
+
+  <div class="editor-count" aria-live="polite">
+    <span>{{ wordCount }} {{ wordCount === 1 ? 'word' : 'words' }}</span>
+    <span>{{ characterCount }} {{ characterCount === 1 ? 'character' : 'characters' }}</span>
+    <span class="editor-count-shortcut">Ctrl/⌘ + Enter to save</span>
   </div>
 </mat-dialog-content>
 
