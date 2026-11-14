@@ -1,4 +1,5 @@
 import { CommonModule, DatePipe } from '@angular/common';
+import type { User } from '@supabase/supabase-js';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
 import { Component, HostListener, computed, effect, inject, signal } from '@angular/core';
 import { FormsModule } from '@angular/forms';
@@ -19,6 +20,7 @@ import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { Note, NoteDraft, NoteEditorDialogComponent } from './note-editor-dialog.component';
+import { SupabaseService } from './supabase.service';
 
 export type NoteView = 'all' | 'recent' | 'favorites' | 'pinned' | 'reminders' | 'archive' | 'trash';
 export type SortMode = 'updated' | 'updated-asc' | 'created' | 'created-asc' | 'title' | 'title-desc' | 'reminder' | 'manual';
@@ -66,39 +68,41 @@ function starterNotes(): Note[] {
   ];
 }
 
+function normalizeNotes(parsed: unknown): Note[] {
+  if (!Array.isArray(parsed)) return [];
+  return parsed.filter((item): item is Note =>
+    typeof item === 'object' && item !== null &&
+    typeof (item as Note).id === 'string' &&
+    typeof (item as Note).title === 'string' &&
+    typeof (item as Note).content === 'string'
+  ).map((item) => ({
+    id: item.id,
+    title: item.title,
+    content: item.content,
+    tags: Array.isArray(item.tags) ? item.tags.filter((tag): tag is string => typeof tag === 'string') : [],
+    color: typeof item.color === 'string' && NOTE_COLORS.includes(item.color) ? item.color : '#ffffff',
+    type: item.type === 'checklist' ? 'checklist' : 'text',
+    checklistItems: Array.isArray(item.checklistItems) ? item.checklistItems
+      .filter((entry) => typeof entry.text === 'string')
+      .map((entry, index) => ({
+        id: typeof entry.id === 'string' ? entry.id : 'item-' + index,
+        text: entry.text,
+        checked: Boolean(entry.checked)
+      })) : [],
+    pinned: Boolean(item.pinned),
+    favorite: Boolean(item.favorite),
+    archived: Boolean(item.archived),
+    trashed: Boolean(item.trashed),
+    reminderDate: typeof item.reminderDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(item.reminderDate) ? item.reminderDate : undefined,
+    createdAt: Number(item.createdAt) || Date.now(),
+    updatedAt: Number(item.updatedAt) || Date.now()
+  }));
+}
+
 function readStoredNotes(): Note[] {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
-    if (!raw) return starterNotes();
-    const parsed: unknown = JSON.parse(raw);
-    if (!Array.isArray(parsed)) return starterNotes();
-    return parsed.filter((item): item is Note =>
-      typeof item === 'object' && item !== null &&
-      typeof (item as Note).id === 'string' &&
-      typeof (item as Note).title === 'string' &&
-      typeof (item as Note).content === 'string'
-    ).map((item) => ({
-      id: item.id,
-      title: item.title,
-      content: item.content,
-      tags: Array.isArray(item.tags) ? item.tags.filter((tag): tag is string => typeof tag === 'string') : [],
-      color: typeof item.color === 'string' && NOTE_COLORS.includes(item.color) ? item.color : '#ffffff',
-      type: item.type === 'checklist' ? 'checklist' : 'text',
-      checklistItems: Array.isArray(item.checklistItems) ? item.checklistItems
-        .filter((entry) => typeof entry.text === 'string')
-        .map((entry, index) => ({
-          id: typeof entry.id === 'string' ? entry.id : 'item-' + index,
-          text: entry.text,
-          checked: Boolean(entry.checked)
-        })) : [],
-      pinned: Boolean(item.pinned),
-      favorite: Boolean(item.favorite),
-      archived: Boolean(item.archived),
-      trashed: Boolean(item.trashed),
-      reminderDate: typeof item.reminderDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(item.reminderDate) ? item.reminderDate : undefined,
-      createdAt: Number(item.createdAt) || Date.now(),
-      updatedAt: Number(item.updatedAt) || Date.now()
-    }));
+    return raw ? normalizeNotes(JSON.parse(raw)) : starterNotes();
   } catch {
     return starterNotes();
   }
@@ -119,6 +123,7 @@ function readStoredNotes(): Note[] {
 export class AppComponent {
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
+  private readonly supabase = inject(SupabaseService);
 
   readonly activeView = signal<NoteView>('all');
   readonly searchTerm = signal('');
@@ -127,6 +132,26 @@ export class AppComponent {
   readonly noteColorOptions = NOTE_COLOR_OPTIONS;
   readonly layoutMode = signal<'grid' | 'list'>('grid');
   readonly notes = signal<Note[]>(readStoredNotes());
+  readonly authReady = signal(false);
+  readonly currentUser = signal<User | null>(null);
+  readonly authMode = signal<'signin' | 'signup'>('signin');
+  readonly recoveryMode = signal(false);
+  readonly authEmail = signal('');
+  readonly authPassword = signal('');
+  readonly newPassword = signal('');
+  readonly authBusy = signal(false);
+  readonly authError = signal('');
+  readonly authMessage = signal('');
+  readonly cloudStatus = signal<'loading' | 'saving' | 'saved' | 'error' | 'idle'>('loading');
+  readonly cloudSyncReady = signal(false);
+  private activeUserId: string | null | undefined;
+  private activatingUserId: string | null | undefined;
+  private authGeneration = 0;
+  private cloudSaveTimer: ReturnType<typeof setTimeout> | null = null;
+  private realtimeReloadTimer: ReturnType<typeof setTimeout> | null = null;
+  private cloudWriteInProgress = false;
+  private lastSyncedSnapshot = '';
+  private notesChannel: ReturnType<SupabaseService['subscribeToNotes']> | null = null;
   readonly activeTag = signal<string | null>(null);
   readonly selectionMode = signal(false);
   readonly selectedNoteIds = signal<string[]>([]);
@@ -258,12 +283,290 @@ export class AppComponent {
 
   constructor() {
     effect(() => {
+      const user = this.currentUser();
+      const ready = this.cloudSyncReady() || this.cloudStatus() === 'error';
+      const notes = this.notes();
+      if (!user || !ready) return;
       try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(this.notes()));
+        localStorage.setItem(this.userStorageKey(user.id), JSON.stringify(notes));
       } catch {
-        this.snackBar.open('Browser storage is full. Export your notes to keep a backup.', 'Dismiss', { duration: 5000 });
+        this.snackBar.open('This device could not update its local note cache. Your cloud notes remain available.', 'Dismiss', { duration: 5000 });
       }
     });
+
+    effect(() => {
+      const user = this.currentUser();
+      const ready = this.cloudSyncReady();
+      const notes = this.notes();
+      if (!user || !ready) return;
+      const snapshot = JSON.stringify(notes);
+      if (snapshot === this.lastSyncedSnapshot) return;
+      if (this.cloudSaveTimer) clearTimeout(this.cloudSaveTimer);
+      this.cloudStatus.set('saving');
+      const userId = user.id;
+      this.cloudSaveTimer = setTimeout(() => {
+        this.cloudSaveTimer = null;
+        void this.persistCloudNotes(userId, notes, snapshot);
+      }, 450);
+    });
+
+    void this.initializeAuth();
+  }
+
+  private userStorageKey(userId: string): string {
+    return STORAGE_KEY + '.user.' + userId;
+  }
+
+  private readCachedNotes(key: string): Note[] {
+    try {
+      const raw = localStorage.getItem(key);
+      return raw ? normalizeNotes(JSON.parse(raw)) : [];
+    } catch {
+      return [];
+    }
+  }
+
+  private async initializeAuth(): Promise<void> {
+    this.supabase.client.auth.onAuthStateChange((event, session) => {
+      if (event === 'PASSWORD_RECOVERY') this.recoveryMode.set(true);
+      if (event === 'SIGNED_OUT') this.recoveryMode.set(false);
+      // Defer database work until Supabase has finished its auth callback.
+      void Promise.resolve().then(() => this.activateUser(session?.user ?? null));
+    });
+
+    try {
+      const { data, error } = await this.supabase.client.auth.getSession();
+      if (error) throw error;
+      await this.activateUser(data.session?.user ?? null);
+    } catch (error) {
+      this.authError.set(this.errorMessage(error, 'Could not initialize sign-in.'));
+      this.authReady.set(true);
+    }
+  }
+
+  private async activateUser(user: User | null, force = false): Promise<void> {
+    const userId = user?.id ?? null;
+    if (this.activatingUserId === userId) return;
+    if (!force && this.activeUserId === userId && this.authReady()) return;
+
+    const generation = ++this.authGeneration;
+    this.activatingUserId = userId;
+    if (this.cloudSaveTimer) clearTimeout(this.cloudSaveTimer);
+    this.cloudSaveTimer = null;
+    if (this.realtimeReloadTimer) clearTimeout(this.realtimeReloadTimer);
+    this.realtimeReloadTimer = null;
+    this.cloudSyncReady.set(false);
+    this.currentUser.set(user);
+
+    if (this.notesChannel) {
+      void this.supabase.client.removeChannel(this.notesChannel);
+      this.notesChannel = null;
+    }
+
+    if (!user) {
+      this.activeUserId = null;
+      this.lastSyncedSnapshot = '';
+      this.notes.set(starterNotes());
+      this.cloudStatus.set('idle');
+      this.authReady.set(true);
+      this.activatingUserId = undefined;
+      return;
+    }
+
+    this.cloudStatus.set('loading');
+    let cachedNotes: Note[] = [];
+    try {
+      const cacheKey = this.userStorageKey(user.id);
+      const hasUserCache = localStorage.getItem(cacheKey) !== null;
+      const hasLegacyCache = localStorage.getItem(STORAGE_KEY) !== null;
+      cachedNotes = this.readCachedNotes(hasUserCache ? cacheKey : STORAGE_KEY);
+      if (!hasUserCache && !hasLegacyCache) cachedNotes = [];
+      this.notes.set(cachedNotes.length ? cachedNotes : (hasUserCache || hasLegacyCache ? [] : starterNotes()));
+
+      const remoteNotes = await this.supabase.loadNotes();
+      if (generation !== this.authGeneration || this.currentUser()?.id !== user.id) return;
+
+      let mergedNotes: Note[];
+      if (remoteNotes.length === 0) {
+        mergedNotes = cachedNotes.length
+          ? cachedNotes
+          : (hasUserCache || hasLegacyCache ? [] : starterNotes());
+      } else {
+        const mergedById = new Map(remoteNotes.map((note) => [note.id, note]));
+        for (const localNote of cachedNotes) {
+          const remoteNote = mergedById.get(localNote.id);
+          if (!remoteNote || localNote.updatedAt > remoteNote.updatedAt) {
+            mergedById.set(localNote.id, localNote);
+          }
+        }
+        mergedNotes = Array.from(mergedById.values());
+      }
+
+      this.notes.set(mergedNotes);
+      const remoteSnapshot = JSON.stringify(remoteNotes);
+      const mergedSnapshot = JSON.stringify(mergedNotes);
+      if (remoteSnapshot !== mergedSnapshot) {
+        await this.supabase.syncNotes(user.id, mergedNotes);
+      }
+      if (generation !== this.authGeneration || this.currentUser()?.id !== user.id) return;
+
+      this.lastSyncedSnapshot = mergedSnapshot;
+      this.activeUserId = user.id;
+      localStorage.setItem(cacheKey, JSON.stringify(mergedNotes));
+      localStorage.removeItem(STORAGE_KEY);
+      this.cloudStatus.set('saved');
+      this.cloudSyncReady.set(true);
+      this.notesChannel = this.supabase.subscribeToNotes(user.id, () => this.scheduleCloudReload(user.id));
+    } catch (error) {
+      if (generation !== this.authGeneration) return;
+      if (cachedNotes.length) this.notes.set(cachedNotes);
+      this.activeUserId = undefined;
+      this.cloudStatus.set('error');
+      this.snackBar.open(
+        'Could not sync your notes with the cloud. Your device copy is being kept safe.',
+        'Retry',
+        { duration: 7000 }
+      ).onAction().subscribe(() => this.retryCloudSync());
+    } finally {
+      if (generation === this.authGeneration) {
+        this.authReady.set(true);
+        this.activatingUserId = undefined;
+      }
+    }
+  }
+
+  private async persistCloudNotes(userId: string, notes: Note[], snapshot: string): Promise<void> {
+    if (this.currentUser()?.id !== userId || !this.cloudSyncReady()) return;
+    this.cloudWriteInProgress = true;
+    try {
+      await this.supabase.syncNotes(userId, notes);
+      if (this.currentUser()?.id === userId) {
+        this.lastSyncedSnapshot = snapshot;
+        this.cloudStatus.set('saved');
+      }
+    } catch (error) {
+      if (this.currentUser()?.id === userId) {
+        this.cloudStatus.set('error');
+        this.snackBar.open(
+          'A cloud save failed. Your changes are cached on this device.',
+          'Retry',
+          { duration: 7000 }
+        ).onAction().subscribe(() => this.retryCloudSync());
+      }
+    } finally {
+      this.cloudWriteInProgress = false;
+    }
+  }
+
+  private scheduleCloudReload(userId: string): void {
+    if (this.cloudWriteInProgress || this.cloudSaveTimer) return;
+    if (this.realtimeReloadTimer) clearTimeout(this.realtimeReloadTimer);
+    this.realtimeReloadTimer = setTimeout(async () => {
+      this.realtimeReloadTimer = null;
+      if (this.currentUser()?.id !== userId || !this.cloudSyncReady() || this.cloudSaveTimer) return;
+      try {
+        const remoteNotes = await this.supabase.loadNotes();
+        if (this.currentUser()?.id !== userId || this.cloudSaveTimer) return;
+        const remoteSnapshot = JSON.stringify(remoteNotes);
+        if (remoteSnapshot !== JSON.stringify(this.notes())) {
+          this.lastSyncedSnapshot = remoteSnapshot;
+          this.notes.set(remoteNotes);
+        }
+      } catch {
+        // Keep the current device copy visible when a realtime refresh is temporarily unavailable.
+      }
+    }, 300);
+  }
+
+  async retryCloudSync(): Promise<void> {
+    const user = this.currentUser();
+    if (!user) return;
+    await this.activateUser(user, true);
+  }
+
+  async submitAuth(): Promise<void> {
+    this.authError.set('');
+    this.authMessage.set('');
+    const email = this.authEmail().trim();
+    const password = this.authPassword();
+    if (!email || !password) return;
+
+    this.authBusy.set(true);
+    try {
+      if (this.authMode() === 'signup') {
+        const { data, error } = await this.supabase.signUp(email, password);
+        if (error) throw error;
+        if (data.session && data.user) {
+          await this.activateUser(data.user);
+        } else {
+          this.authMessage.set('Your account was created. Check your email for the confirmation link, then return here to sign in.');
+          this.authMode.set('signin');
+          this.authPassword.set('');
+        }
+      } else {
+        const { data, error } = await this.supabase.signIn(email, password);
+        if (error) throw error;
+        if (data.user) await this.activateUser(data.user);
+      }
+    } catch (error) {
+      this.authError.set(this.errorMessage(error, 'Sign-in failed. Please try again.'));
+    } finally {
+      this.authBusy.set(false);
+    }
+  }
+
+  async sendPasswordReset(): Promise<void> {
+    this.authError.set('');
+    this.authMessage.set('');
+    const email = this.authEmail().trim();
+    if (!email) {
+      this.authError.set('Enter your email address first.');
+      return;
+    }
+    this.authBusy.set(true);
+    try {
+      const { error } = await this.supabase.sendPasswordReset(email);
+      if (error) throw error;
+      this.authMessage.set('Password reset email sent. Follow the link to choose a new password.');
+    } catch (error) {
+      this.authError.set(this.errorMessage(error, 'Could not send a password reset email.'));
+    } finally {
+      this.authBusy.set(false);
+    }
+  }
+
+  async completePasswordRecovery(): Promise<void> {
+    this.authError.set('');
+    this.authMessage.set('');
+    if (this.newPassword().length < 6) {
+      this.authError.set('Choose a password with at least 6 characters.');
+      return;
+    }
+    this.authBusy.set(true);
+    try {
+      const { error } = await this.supabase.updatePassword(this.newPassword());
+      if (error) throw error;
+      this.recoveryMode.set(false);
+      this.newPassword.set('');
+      this.authMessage.set('Your password has been updated.');
+    } catch (error) {
+      this.authError.set(this.errorMessage(error, 'Could not update your password.'));
+    } finally {
+      this.authBusy.set(false);
+    }
+  }
+
+  async signOut(): Promise<void> {
+    try {
+      const { error } = await this.supabase.signOut();
+      if (error) throw error;
+    } catch (error) {
+      this.snackBar.open(this.errorMessage(error, 'Could not sign out.'), 'Dismiss', { duration: 4500 });
+    }
+  }
+
+  private errorMessage(error: unknown, fallback: string): string {
+    return error instanceof Error && error.message ? error.message : fallback;
   }
 
   count(view: NoteView): number {
@@ -854,7 +1157,7 @@ export class AppComponent {
   }
 
   showStorageInfo(): void {
-    this.snackBar.open('Your notes are stored in this browser on this device. Use Export notes to create a backup.', 'Got it', { duration: 5000 });
+    this.snackBar.open('Your notes are saved to your AngularNotes cloud account and cached on this device. Export a JSON backup for an extra copy.', 'Got it', { duration: 6000 });
   }
 
   showSearchTips(): void {

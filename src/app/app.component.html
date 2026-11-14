@@ -1,3 +1,69 @@
+@if (!authReady()) {
+  <main class="auth-loading" aria-live="polite">
+    <div class="auth-loading-mark"><mat-icon>lightbulb</mat-icon></div>
+    <p>Connecting to AngularNotes...</p>
+  </main>
+} @else if (recoveryMode()) {
+  <main class="auth-page">
+    <mat-card class="auth-card">
+      <div class="auth-brand-mark"><mat-icon>lightbulb</mat-icon></div>
+      <h1>Choose a new password</h1>
+      <p class="auth-description">Create a new password for your AngularNotes account.</p>
+      @if (authError()) { <div class="auth-alert auth-alert-error" role="alert">{{ authError() }}</div> }
+      @if (authMessage()) { <div class="auth-alert auth-alert-message" role="status">{{ authMessage() }}</div> }
+      <form class="auth-form" (ngSubmit)="completePasswordRecovery()">
+        <mat-form-field appearance="outline">
+          <mat-label>New password</mat-label>
+          <input matInput type="password" [ngModel]="newPassword()" (ngModelChange)="newPassword.set($event)" name="newPassword" autocomplete="new-password" minlength="6" required>
+        </mat-form-field>
+        <button mat-flat-button color="primary" type="submit" [disabled]="authBusy() || newPassword().length < 6">
+          {{ authBusy() ? 'Updating...' : 'Update password' }}
+        </button>
+      </form>
+    </mat-card>
+  </main>
+} @else if (!currentUser()) {
+  <main class="auth-page">
+    <mat-card class="auth-card">
+      <div class="auth-brand-mark"><mat-icon>lightbulb</mat-icon></div>
+      <h1>{{ authMode() === 'signup' ? 'Create your account' : 'Welcome back' }}</h1>
+      <p class="auth-description">
+        {{ authMode() === 'signup' ? 'Create an account to keep your notes safely in the cloud and access them on your other devices.' : 'Sign in to access your notes from any device.' }}
+      </p>
+      @if (authError()) { <div class="auth-alert auth-alert-error" role="alert">{{ authError() }}</div> }
+      @if (authMessage()) { <div class="auth-alert auth-alert-message" role="status">{{ authMessage() }}</div> }
+      <form class="auth-form" (ngSubmit)="submitAuth()">
+        <mat-form-field appearance="outline">
+          <mat-label>Email address</mat-label>
+          <input matInput type="email" [ngModel]="authEmail()" (ngModelChange)="authEmail.set($event)" name="email" autocomplete="email" required>
+          <mat-icon matSuffix>mail_outline</mat-icon>
+        </mat-form-field>
+        <mat-form-field appearance="outline">
+          <mat-label>Password</mat-label>
+          <input matInput type="password" [ngModel]="authPassword()" (ngModelChange)="authPassword.set($event)" name="password" autocomplete="{{ authMode() === 'signup' ? 'new-password' : 'current-password' }}" minlength="6" required>
+          <mat-icon matSuffix>lock_outline</mat-icon>
+        </mat-form-field>
+        @if (authMode() === 'signup') {
+          <p class="auth-field-hint">Use at least 6 characters. You may need to confirm your email before signing in.</p>
+        }
+        <button mat-flat-button color="primary" type="submit" [disabled]="authBusy() || !authEmail().trim() || authPassword().length < 6">
+          {{ authBusy() ? 'Please wait...' : authMode() === 'signup' ? 'Create account' : 'Sign in' }}
+        </button>
+      </form>
+      <div class="auth-secondary-actions">
+        @if (authMode() === 'signin') {
+          <button mat-button type="button" (click)="sendPasswordReset()" [disabled]="authBusy()">Forgot password?</button>
+          <span>New to AngularNotes?</span>
+          <button mat-button color="primary" type="button" (click)="authMode.set('signup'); authError.set(''); authMessage.set('')">Create account</button>
+        } @else {
+          <span>Already have an account?</span>
+          <button mat-button color="primary" type="button" (click)="authMode.set('signin'); authError.set(''); authMessage.set('')">Sign in</button>
+        }
+      </div>
+      <div class="auth-privacy"><mat-icon>cloud_done</mat-icon><span>Your notes are private to your account.</span></div>
+    </mat-card>
+  </main>
+} @else {
 <mat-sidenav-container class="app-shell">
   <mat-sidenav class="sidebar" mode="side" opened>
     <mat-nav-list class="primary-navigation">
@@ -54,11 +120,11 @@
     </mat-nav-list>
 
     <div class="sidebar-bottom">
-      <button mat-button class="storage-note" (click)="showStorageInfo()">
-        <mat-icon>cloud_done</mat-icon>
-        <span>Saved on this device</span>
+      <button mat-button class="storage-note" (click)="cloudStatus() === 'error' ? retryCloudSync() : showStorageInfo()">
+        <mat-icon>{{ cloudStatus() === 'saved' ? 'cloud_done' : cloudStatus() === 'saving' ? 'cloud_sync' : cloudStatus() === 'error' ? 'cloud_off' : 'cloud_queue' }}</mat-icon>
+        <span>{{ cloudStatus() === 'saved' ? 'All changes saved' : cloudStatus() === 'saving' ? 'Saving to cloud...' : cloudStatus() === 'error' ? 'Cloud sync paused · Retry' : 'Connecting to cloud...' }}</span>
       </button>
-      <span class="sidebar-footnote">Your notes stay in this browser</span>
+      <span class="sidebar-footnote">{{ currentUser()?.email }} · Private cloud notes</span>
     </div>
   </mat-sidenav>
 
@@ -78,6 +144,13 @@
       </mat-form-field>
 
       <span class="toolbar-spacer"></span>
+      <button mat-button class="account-button" [matMenuTriggerFor]="accountMenu" aria-label="Account options">
+        <mat-icon>account_circle</mat-icon>
+        <span>{{ currentUser()?.email }}</span>
+      </button>
+      <mat-menu #accountMenu="matMenu">
+        <button mat-menu-item (click)="signOut()"><mat-icon>logout</mat-icon><span>Sign out</span></button>
+      </mat-menu>
       <button mat-icon-button class="toolbar-action" [matMenuTriggerFor]="appMenu" matTooltip="More options" aria-label="More options">
         <mat-icon>more_vert</mat-icon>
       </button>
@@ -341,3 +414,4 @@
     </main>
   </mat-sidenav-content>
 </mat-sidenav-container>
+}
