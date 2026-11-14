@@ -681,6 +681,51 @@
 .note-drag-handle:active { cursor: grabbing; }
 .note-card:hover .note-drag-handle,
 .note-drag-handle:focus-visible { opacity: 1; }
+
+/* Keep the drag glyph precisely centered inside its Material ripple circle. */
+.note-drag-handle.mat-mdc-icon-button {
+  display: inline-flex !important;
+  flex: 0 0 40px;
+  align-items: center !important;
+  justify-content: center !important;
+  width: 40px !important;
+  min-width: 40px !important;
+  height: 40px !important;
+  min-height: 40px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border-radius: 50% !important;
+  line-height: 0 !important;
+  text-align: center;
+  vertical-align: middle;
+  box-sizing: border-box;
+  transform: none !important;
+}
+.note-drag-handle.mat-mdc-icon-button .mat-mdc-button-touch-target {
+  top: 50%;
+  left: 50%;
+  width: 40px;
+  height: 40px;
+  transform: translate(-50%, -50%);
+}
+.note-drag-handle.mat-mdc-icon-button .mat-mdc-button-persistent-ripple,
+.note-drag-handle.mat-mdc-icon-button .mdc-icon-button__ripple {
+  inset: 0;
+  border-radius: 50%;
+}
+.note-drag-handle.mat-mdc-icon-button mat-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 20px;
+  width: 20px;
+  height: 20px;
+  margin: 0 !important;
+  padding: 0;
+  font-size: 20px;
+  line-height: 20px;
+  text-align: center;
+}
 .note-card.cdk-drag-preview {
   border-color: #1a73e8 !important;
   box-shadow: 0 5px 16px rgba(60, 64, 67, .22) !important;
