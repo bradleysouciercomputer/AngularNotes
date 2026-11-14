@@ -75,4 +75,4 @@ AngularNotes now uses the Supabase project AngularNotes for email/password authe
 - Collaborators sign in to AngularNotes using the exact invited email address, then find the note in **Shared with me**.
 - Owners can change roles or revoke access. Collaborators can remove a note from their own Shared with me collection.
 - Collaboration permissions are enforced by Postgres row-level security. Shared editor saves update the owner's record without reassigning ownership.
-- The current invitation flow grants access by email but does not send a separate email notification. The recipient must already have an AngularNotes account or create one using that same email address.
+- The current invitation flow grants access by email but does not send a separate email notification yet. The recipient must already have an AngularNotes account or create one using that same email address.

@@ -128,7 +128,7 @@ export class SupabaseService {
 
     for (const [index, note] of editableSharedNotes.entries()) {
       const ownerId = note.ownerId!;
-      const { id: _id, user_id: _userId, ...updates } = rowFor(note, ownerId, ownNotes.length + index);
+      const { id: _id, user_id: _userId, sort_order: _sortOrder, ...updates } = rowFor(note, ownerId, ownNotes.length + index);
       const { data, error } = await this.client
         .from('notes')
         .update(updates)

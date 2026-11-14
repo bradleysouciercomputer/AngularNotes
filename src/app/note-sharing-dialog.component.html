@@ -3,7 +3,7 @@
     <h2 mat-dialog-title>Share note</h2>
     <p class="sharing-note-title">{{ data.note.title || 'Untitled note' }}</p>
   </div>
-  <button mat-icon-button mat-dialog-close aria-label="Close sharing dialog" (click)="close()">
+  <button mat-icon-button aria-label="Close sharing dialog" (click)="close()">
     <mat-icon>close</mat-icon>
   </button>
 </div>
@@ -32,7 +32,7 @@
 
   <div class="sharing-explainer">
     <mat-icon>info</mat-icon>
-    <span>Collaborators must sign in to AngularNotes using this exact email address. They will then find the note in Shared with me.</span>
+    <span>Collaborators must sign in to AngularNotes using this exact email address. They will then find the note in Shared with me. A separate email notification is not sent yet.</span>
   </div>
 
   @if (error()) { <div class="sharing-alert sharing-error" role="alert">{{ error() }}</div> }
@@ -72,5 +72,5 @@
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-  <button mat-button mat-dialog-close (click)="close()">Done</button>
+  <button mat-button (click)="close()">Done</button>
 </mat-dialog-actions>

@@ -211,7 +211,7 @@ export class AppComponent {
         if (note.trashed) return false;
         if (selectedView === 'archive') {
           if (!note.archived) return false;
-        } else if (note.archived) {
+        } else if (selectedView !== 'shared' && note.archived) {
           return false;
         }
       }
@@ -1026,9 +1026,25 @@ export class AppComponent {
     }
   }
 
-  shareNote(note: Note): void {
+  async shareNote(note: Note): Promise<void> {
     const user = this.currentUser();
     if (!user || !this.canManageSharing(note)) return;
+    const currentNotes = this.notes();
+    const snapshot = JSON.stringify(currentNotes);
+    if (this.cloudSaveTimer) clearTimeout(this.cloudSaveTimer);
+    this.cloudSaveTimer = null;
+    try {
+      if (snapshot !== this.lastSyncedSnapshot) {
+        await this.supabase.syncNotes(user.id, currentNotes);
+        this.lastSyncedSnapshot = snapshot;
+        this.cloudStatus.set('saved');
+      }
+    } catch (error) {
+      this.cloudStatus.set('error');
+      this.snackBar.open(error instanceof Error ? error.message : 'Save this note before sharing it.', 'Dismiss', { duration: 4000 });
+      return;
+    }
+
     const ref = this.dialog.open(NoteSharingDialogComponent, {
       data: { note, ownerId: user.id, currentEmail: user.email || '' },
       width: '520px',

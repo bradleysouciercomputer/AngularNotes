@@ -346,10 +346,10 @@
               <button mat-menu-item *ngIf="canManageSharing(note)" (click)="shareNote(note)"><mat-icon>group_add</mat-icon><span>Manage access…</span></button>
               <button mat-menu-item *ngIf="isSharedNote(note)" (click)="leaveSharedNote(note)"><mat-icon>link_off</mat-icon><span>Remove from Shared with me</span></button>
               <button mat-menu-item *ngIf="!note.trashed" (click)="duplicateNote(note)"><mat-icon>file_copy</mat-icon><span>Make a copy</span></button>
-              <button mat-menu-item *ngIf="!note.trashed" (click)="moveNoteToTop(note)"><mat-icon>vertical_align_top</mat-icon><span>Move to top</span></button>
-              <button mat-menu-item *ngIf="!note.trashed" (click)="moveNoteToBottom(note)"><mat-icon>vertical_align_bottom</mat-icon><span>Move to bottom</span></button>
+              <button mat-menu-item *ngIf="!note.trashed && canEditNote(note) && !isSharedNote(note)" (click)="moveNoteToTop(note)"><mat-icon>vertical_align_top</mat-icon><span>Move to top</span></button>
+              <button mat-menu-item *ngIf="!note.trashed && canEditNote(note) && !isSharedNote(note)" (click)="moveNoteToBottom(note)"><mat-icon>vertical_align_bottom</mat-icon><span>Move to bottom</span></button>
               <button mat-menu-item *ngIf="!note.trashed" (click)="downloadNoteMarkdown(note)"><mat-icon>download</mat-icon><span>Download as Markdown</span></button>
-              <button mat-menu-item *ngIf="!note.trashed && note.reminderDate" (click)="clearReminder(note)"><mat-icon>notifications_off</mat-icon><span>Remove reminder</span></button>
+              <button mat-menu-item *ngIf="!note.trashed && note.reminderDate && canEditNote(note)" (click)="clearReminder(note)"><mat-icon>notifications_off</mat-icon><span>Remove reminder</span></button>
               <button mat-menu-item *ngIf="!note.trashed && canEditNote(note)" (click)="togglePinned(note)"><mat-icon>{{ note.pinned ? 'keep_off' : 'push_pin' }}</mat-icon><span>{{ note.pinned ? 'Unpin note' : 'Pin note' }}</span></button>
               <button mat-menu-item *ngIf="!note.trashed && canEditNote(note)" (click)="toggleArchive(note)"><mat-icon>{{ note.archived ? 'unarchive' : 'archive' }}</mat-icon><span>{{ note.archived ? 'Remove from archive' : 'Archive' }}</span></button>
               <button mat-menu-item *ngIf="note.trashed" (click)="restoreNote(note)"><mat-icon>restore_from_trash</mat-icon><span>Restore</span></button>
@@ -369,6 +369,7 @@
               *ngFor="let item of note.checklistItems; trackBy: trackByChecklistItem"
               [checked]="item.checked"
               (click)="$event.stopPropagation()"
+              [disabled]="!canEditNote(note)"
               (change)="toggleChecklistItem(note, item.id, $event.checked)">
               <span [class.checklist-complete]="item.checked">{{ item.text }}</span>
             </mat-checkbox>
