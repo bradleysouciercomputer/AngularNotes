@@ -41,13 +41,22 @@ export class NoteSharingDialogComponent {
     void this.loadShares();
   }
 
+  private errorMessage(error: unknown, fallback: string): string {
+    if (error instanceof Error && error.message) return error.message;
+    if (typeof error === 'object' && error !== null && 'message' in error) {
+      const message = (error as { message?: unknown }).message;
+      if (typeof message === 'string' && message.trim()) return message;
+    }
+    return fallback;
+  }
+
   async loadShares(): Promise<void> {
     this.loading.set(true);
     this.error.set('');
     try {
       this.shares.set(await this.supabase.listNoteShares(this.data.ownerId, this.data.note.id));
     } catch (error) {
-      this.error.set(error instanceof Error ? error.message : 'Could not load collaborators.');
+      this.error.set(this.errorMessage(error, 'Could not load collaborators.'));
     } finally {
       this.loading.set(false);
     }
@@ -61,7 +70,7 @@ export class NoteSharingDialogComponent {
       this.error.set('Enter a valid email address.');
       return;
     }
-    if (email === this.data.currentEmail.toLowerCase()) {
+    if (email === (this.data.currentEmail || '').trim().toLowerCase()) {
       this.error.set('You already own this note.');
       return;
     }
@@ -75,7 +84,7 @@ export class NoteSharingDialogComponent {
       this.changed = true;
       this.message.set('Access saved for ' + email + '. They can see this note after signing in with that email address.');
     } catch (error) {
-      this.error.set(error instanceof Error ? error.message : 'Could not share this note.');
+      this.error.set(this.errorMessage(error, 'Could not share this note.'));
     } finally {
       this.saving.set(false);
     }
@@ -90,7 +99,7 @@ export class NoteSharingDialogComponent {
       this.shares.update((current) => current.map((item) => item.id === share.id ? { ...item, role } : item));
       this.changed = true;
     } catch (error) {
-      this.error.set(error instanceof Error ? error.message : 'Could not update this role.');
+      this.error.set(this.errorMessage(error, 'Could not update this role.'));
     } finally {
       this.saving.set(false);
     }
@@ -105,7 +114,7 @@ export class NoteSharingDialogComponent {
       this.changed = true;
       this.message.set('Access revoked for ' + share.invited_email + '.');
     } catch (error) {
-      this.error.set(error instanceof Error ? error.message : 'Could not revoke access.');
+      this.error.set(this.errorMessage(error, 'Could not revoke access.'));
     } finally {
       this.saving.set(false);
     }

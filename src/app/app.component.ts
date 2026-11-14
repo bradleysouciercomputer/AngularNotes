@@ -1264,7 +1264,8 @@ export class AppComponent {
   }
 
   @HostListener('window:keydown', ['$event'])
-  handleKeyboardShortcuts(event: KeyboardEvent): void {
+  handleKeyboardShortcuts(event: KeyboardEvent | undefined): void {
+    if (!event || typeof event.key !== 'string' || event.key.length === 0) return;
     const key = event.key.toLowerCase();
     if (key === 'escape' && this.selectionMode()) {
       this.clearSelectionMode();
