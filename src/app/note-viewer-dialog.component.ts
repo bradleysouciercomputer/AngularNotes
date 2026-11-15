@@ -54,8 +54,8 @@ export class NoteViewerDialogComponent {
     if (mime.startsWith('video/')) return 'movie';
     if (mime.startsWith('audio/')) return 'audio_file';
     if (mime === 'application/pdf' || name.endsWith('.pdf')) return 'picture_as_pdf';
-    if (/\\.(docx?|odt|rtf|txt|md)$/.test(name)) return 'description';
-    if (/\\.(xlsx?|csv|ods)$/.test(name)) return 'table_chart';
+    if (/(word|document|officedocument)/.test(mime) || mime.startsWith('text/') || /\.(docx?|odt|rtf|txt|md)$/.test(name)) return 'description';
+    if (/(sheet|excel|spreadsheet)/.test(mime) || /\.(xlsx?|csv|ods)$/.test(name)) return 'table_chart';
     return 'insert_drive_file';
   }
 }

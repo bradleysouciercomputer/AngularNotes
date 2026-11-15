@@ -127,8 +127,9 @@ export class NoteEditorDialogComponent {
     if (mime.startsWith('video/')) return 'movie';
     if (mime.startsWith('audio/')) return 'audio_file';
     if (mime === 'application/pdf' || name.endsWith('.pdf')) return 'picture_as_pdf';
-    if (/(word|document|officedocument|text\\/)/.test(mime) || /\\.(docx?|odt|rtf|txt|md)$/.test(name)) return 'description';
-    if (/(sheet|excel|spreadsheet)/.test(mime) || /\\.(xlsx?|csv|ods)$/.test(name)) return 'table_chart';
+    if (/(word|document|officedocument)/.test(mime) || mime.startsWith('text/') || /\.(docx?|odt|rtf|txt|md)$/.test(name)) return 'description';
+    if (/(sheet|excel|spreadsheet)/.test(mime) || /\.(xlsx?|csv|ods)$/.test(name)) return 'table_chart';
+    if (/(zip|compressed|archive)/.test(mime) || /\.(zip|7z|rar|gz)$/.test(name)) return 'folder_zip';
     return 'insert_drive_file';
   }
 
