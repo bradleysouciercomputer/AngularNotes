@@ -29,7 +29,6 @@ export type SortMode = 'updated' | 'updated-asc' | 'created' | 'created-asc' | '
 export type NoteTypeFilter = 'all' | 'text' | 'checklist';
 
 const STORAGE_KEY = 'angularnotes.notes.v1';
-const THEME_STORAGE_KEY = 'angularnotes.theme.v1';
 const NOTE_COLOR_OPTIONS = [
   { label: 'Default', value: '#ffffff' },
   { label: 'Red', value: '#fce8e6' },
@@ -43,18 +42,6 @@ const NOTE_COLOR_OPTIONS = [
   { label: 'Gray', value: '#f1f3f4' }
 ];
 const NOTE_COLORS: string[] = NOTE_COLOR_OPTIONS.map((option) => option.value);
-const DARK_NOTE_COLORS: Record<string, string> = {
-  '#ffffff': '#252a31',
-  '#fce8e6': '#4b3033',
-  '#fef1e1': '#4c3929',
-  '#fef7d1': '#4d4526',
-  '#e6f4ea': '#294333',
-  '#e4f7f5': '#294544',
-  '#e8f0fe': '#2b405b',
-  '#f3e8fd': '#443451',
-  '#fce8f3': '#4b3040',
-  '#f1f3f4': '#353c45'
-};
 
 function starterNotes(): Note[] {
   const now = Date.now();
@@ -125,14 +112,6 @@ function readStoredNotes(): Note[] {
   }
 }
 
-function readDarkModePreference(): boolean {
-  try {
-    return typeof localStorage !== 'undefined' && localStorage.getItem(THEME_STORAGE_KEY) === 'dark';
-  } catch {
-    return false;
-  }
-}
-
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -157,7 +136,6 @@ export class AppComponent {
   readonly noteColorOptions = NOTE_COLOR_OPTIONS;
   readonly layoutMode = signal<'grid' | 'list'>('grid');
   readonly notes = signal<Note[]>(readStoredNotes());
-  readonly darkMode = signal(readDarkModePreference());
   readonly authReady = signal(false);
   readonly currentUser = signal<User | null>(null);
   readonly authMode = signal<'signin' | 'signup'>('signin');
@@ -358,8 +336,6 @@ export class AppComponent {
   });
 
   constructor() {
-    this.applyTheme(this.darkMode());
-
     effect(() => {
       const user = this.currentUser();
       const ready = this.cloudSyncReady() || this.cloudStatus() === 'error';
@@ -391,28 +367,6 @@ export class AppComponent {
 
     if (typeof window !== 'undefined') window.setInterval(() => this.checkDueReminders(), 60_000);
     void this.initializeAuth();
-  }
-
-  noteCardBackground(note: Note): string {
-    const color = note.color || '#ffffff';
-    return this.darkMode() ? (DARK_NOTE_COLORS[color] || '#252a31') : color;
-  }
-
-  toggleDarkMode(): void {
-    const enabled = !this.darkMode();
-    this.darkMode.set(enabled);
-    this.applyTheme(enabled);
-    try {
-      localStorage.setItem(THEME_STORAGE_KEY, enabled ? 'dark' : 'light');
-    } catch {
-      // The theme remains active for this session if storage is unavailable.
-    }
-  }
-
-  private applyTheme(enabled: boolean): void {
-    if (typeof document === 'undefined') return;
-    document.documentElement.classList.toggle('dark-theme', enabled);
-    document.documentElement.style.colorScheme = enabled ? 'dark' : 'light';
   }
 
   private userStorageKey(userId: string): string {

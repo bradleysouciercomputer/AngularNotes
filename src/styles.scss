@@ -14,70 +14,18 @@ html {
 }
 
 :root {
-  /* Semantic surface and text tokens shared by every component. */
-  --page-bg: #ffffff;
-  --sidebar-bg: #ffffff;
-  --surface: #ffffff;
-  --surface-raised: #ffffff;
+  --page-bg: #fff;
+  --sidebar-bg: #fff;
+  --surface: #fff;
   --surface-muted: #f8fafd;
-  --surface-subtle: #f1f3f4;
-  --surface-hover: #f1f3f4;
-  --surface-dialog: #ffffff;
-  --surface-overlay: #ffffff;
-  --surface-calendar-day: #f8f9fa;
-  --surface-calendar-outside: #ffffff;
-  --surface-calendar-selected: #f1f6fe;
-
-  --text-primary: #202124;
-  --text-secondary: #5f6368;
-  --text-tertiary: #80868b;
-  --text-disabled: #9aa0a6;
-  --text-inverse: #ffffff;
-
-  --border-color: #dadce0;
-  --border-soft: #e8eaed;
-  --border-hover: #bdc1c6;
-
-  --accent: #1a73e8;
-  --accent-text: #174ea6;
-  --accent-container: #e8f0fe;
-  --accent-container-soft: #f1f6fe;
-  --accent-surface: #f8fbff;
-  --accent-border: #d2e3fc;
-  --on-accent: #ffffff;
-
-  --selected-surface: #feefc3;
-  --selected-text: #202124;
-  --selected-icon: #202124;
-
-  --brand-accent: #f9ab00;
-  --brand-accent-soft: #fff7df;
-  --success: #188038;
-  --success-text: #137333;
-  --success-container: #e6f4ea;
-  --success-container-text: #137333;
-  --danger: #b3261e;
-  --danger-container: #fce8e6;
-  --danger-container-text: #b3261e;
-
-  --bulk-surface: #f8fbff;
-  --bulk-border: #d2e3fc;
-  --bulk-text: #3c4043;
-  --bulk-meta: #5f6368;
-  --bulk-danger: #b3261e;
-  --progress-track: rgba(60, 64, 67, .13);
-  --focus-ring: rgba(26, 115, 232, .55);
-
-  /* Backwards-compatible aliases used by the existing layout rules. */
-  --ink: var(--text-primary);
-  --muted: var(--text-secondary);
-  --outline: var(--border-color);
-  --outline-soft: var(--border-soft);
-  --google-blue: var(--accent);
-  --google-blue-soft: var(--accent-container);
-  --google-yellow-soft: var(--selected-surface);
-  --note-default: var(--surface);
-
+  --ink: #202124;
+  --muted: #5f6368;
+  --outline: #dadce0;
+  --outline-soft: #e8eaed;
+  --google-blue: #1a73e8;
+  --google-blue-soft: #e8f0fe;
+  --google-yellow-soft: #feefc3;
+  --note-default: #fff;
   font-family: Roboto, Arial, sans-serif;
   font-synthesis: none;
 }
@@ -86,7 +34,7 @@ html {
 html, body { min-width: 320px; min-height: 100%; margin: 0; }
 body {
   background: var(--page-bg);
-  color: var(--text-primary);
+  color: var(--ink);
   font-family: Roboto, Arial, sans-serif;
 }
 button, input, textarea { font: inherit; }
@@ -116,20 +64,10 @@ button, input, textarea { font: inherit; }
   font-weight: 500;
 }
 :focus-visible {
-  outline: 2px solid var(--focus-ring);
+  outline: 2px solid rgba(26, 115, 232, .55);
   outline-offset: 2px;
 }
 
-/* The auth theme control is positioned consistently in both appearances. */
-.auth-theme-toggle {
-  position: fixed;
-  top: 18px;
-  right: 18px;
-  z-index: 10;
-  color: var(--text-secondary);
-  background: var(--surface-raised);
-}
-.auth-theme-toggle:hover { background: var(--surface-hover); }
 
 /* AngularNotes cloud account screens */
 .auth-page {
@@ -137,7 +75,7 @@ button, input, textarea { font: inherit; }
   display: grid;
   place-items: center;
   padding: 28px 18px;
-  background: var(--surface-muted);
+  background: #f8fafd;
 }
 .auth-loading {
   min-height: 100vh;
@@ -145,8 +83,8 @@ button, input, textarea { font: inherit; }
   place-content: center;
   justify-items: center;
   gap: 14px;
-  color: var(--text-secondary);
-  background: var(--surface-muted);
+  color: #5f6368;
+  background: #f8fafd;
   font-size: 14px;
 }
 .auth-loading-mark,
@@ -157,8 +95,8 @@ button, input, textarea { font: inherit; }
   height: 52px;
   margin: 0 auto 14px;
   border-radius: 16px;
-  color: var(--brand-accent);
-  background: var(--brand-accent-soft);
+  color: #f9ab00;
+  background: #fff7df;
 }
 .auth-loading-mark mat-icon,
 .auth-brand-mark mat-icon {
@@ -168,15 +106,14 @@ button, input, textarea { font: inherit; }
 }
 .auth-card {
   width: min(100%, 440px);
-  background: var(--surface);
   padding: 34px 34px 26px;
-  border: 1px solid var(--border-soft);
+  border: 1px solid #e8eaed;
   border-radius: 24px;
   box-shadow: 0 8px 28px rgba(60, 64, 67, .08);
 }
 .auth-card h1 {
   margin: 0;
-  color: var(--text-primary);
+  color: #202124;
   font-size: 25px;
   font-weight: 500;
   letter-spacing: -.5px;
@@ -184,7 +121,7 @@ button, input, textarea { font: inherit; }
 }
 .auth-description {
   margin: 10px 0 24px;
-  color: var(--text-secondary);
+  color: #5f6368;
   font-size: 14px;
   line-height: 1.55;
   text-align: center;
@@ -192,7 +129,7 @@ button, input, textarea { font: inherit; }
 .auth-form { display: flex; flex-direction: column; gap: 8px; }
 .auth-form mat-form-field { width: 100%; }
 .auth-form > button { width: 100%; min-height: 46px; margin-top: 4px; }
-.auth-field-hint { margin: -6px 0 8px; color: var(--text-secondary); font-size: 12px; }
+.auth-field-hint { margin: -6px 0 8px; color: #6b7280; font-size: 12px; }
 .auth-alert {
   margin: 0 0 16px;
   padding: 11px 13px;
@@ -200,8 +137,8 @@ button, input, textarea { font: inherit; }
   font-size: 13px;
   line-height: 1.45;
 }
-.auth-alert-error { color: var(--danger); background: var(--danger-container); }
-.auth-alert-message { color: var(--success-text); background: var(--success-container); }
+.auth-alert-error { color: #b3261e; background: #fce8e6; }
+.auth-alert-message { color: #137333; background: #e6f4ea; }
 .auth-secondary-actions {
   display: flex;
   align-items: center;
@@ -209,7 +146,7 @@ button, input, textarea { font: inherit; }
   flex-wrap: wrap;
   gap: 2px 6px;
   margin-top: 15px;
-  color: var(--text-secondary);
+  color: #5f6368;
   font-size: 13px;
 }
 .auth-secondary-actions span { padding-left: 6px; }
@@ -220,15 +157,15 @@ button, input, textarea { font: inherit; }
   gap: 7px;
   margin-top: 22px;
   padding-top: 17px;
-  border-top: 1px solid var(--border-soft);
-  color: var(--text-secondary);
+  border-top: 1px solid #f1f3f4;
+  color: #6b7280;
   font-size: 12px;
 }
-.auth-privacy mat-icon { width: 18px; height: 18px; font-size: 18px; color: var(--success); }
+.auth-privacy mat-icon { width: 18px; height: 18px; font-size: 18px; color: #188038; }
 .account-button {
   max-width: 220px;
   min-width: 0;
-  color: var(--text-secondary);
+  color: #5f6368;
   text-transform: none;
 }
 .account-button mat-icon { flex: 0 0 auto; margin-right: 6px; }
@@ -243,9 +180,9 @@ button, input, textarea { font: inherit; }
 .reminder-calendar {
   margin: -2px 0 22px;
   padding: 18px;
-  border: 1px solid var(--border-color);
+  border: 1px solid #dadce0;
   border-radius: 12px;
-  background: var(--surface);
+  background: #fff;
 }
 .calendar-header {
   display: flex;
@@ -262,19 +199,19 @@ button, input, textarea { font: inherit; }
 }
 .calendar-heading h2 {
   margin: 0;
-  color: var(--text-primary);
+  color: #202124;
   font-size: 18px;
   font-weight: 500;
 }
 .calendar-heading span {
-  color: var(--text-tertiary);
+  color: #80868b;
   font-size: 12px;
 }
 .calendar-month-controls {
   display: flex;
   align-items: center;
   gap: 4px;
-  color: var(--text-secondary);
+  color: #5f6368;
 }
 .calendar-month-controls button {
   border-radius: 20px;
@@ -290,7 +227,7 @@ button, input, textarea { font: inherit; }
 }
 .calendar-weekday {
   padding: 8px 4px;
-  color: var(--text-tertiary);
+  color: #80868b;
   font-size: 11px;
   font-weight: 500;
   text-align: center;
@@ -305,15 +242,15 @@ button, input, textarea { font: inherit; }
   padding: 8px;
   border: 1px solid transparent;
   border-radius: 9px;
-  background: var(--surface-calendar-day);
-  color: var(--text-primary);
+  background: #f8f9fa;
+  color: #202124;
   text-align: left;
   cursor: pointer;
   transition: background .12s ease, border-color .12s ease;
 }
 .calendar-day:hover {
-  border-color: var(--border-color);
-  background: var(--surface-hover);
+  border-color: #dadce0;
+  background: #f1f3f4;
 }
 .calendar-day-number {
   display: inline-flex;
@@ -327,34 +264,34 @@ button, input, textarea { font: inherit; }
   font-variant-numeric: tabular-nums;
 }
 .calendar-day-outside {
-  background: var(--surface-calendar-outside);
-  color: var(--text-disabled);
+  background: #fff;
+  color: #bdc1c6;
 }
-.calendar-day-outside:hover { background: var(--surface-hover); }
+.calendar-day-outside:hover { background: #f8f9fa; }
 .calendar-day-today .calendar-day-number {
-  background: var(--accent-container);
-  color: var(--accent-text);
+  background: #e8f0fe;
+  color: #174ea6;
 }
 .calendar-day-selected {
-  border-color: var(--accent);
-  background: var(--surface-calendar-selected);
+  border-color: #1a73e8;
+  background: #f1f6fe;
 }
 .calendar-day-selected .calendar-day-number {
-  background: var(--accent);
-  color: var(--on-accent);
+  background: #1a73e8;
+  color: #fff;
 }
 .calendar-day-count {
   max-width: 100%;
   margin: 4px 0 0 2px;
   overflow: hidden;
-  color: var(--text-secondary);
+  color: #5f6368;
   font-size: 10px;
   line-height: 1.2;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .calendar-day-has-reminders:not(.calendar-day-selected) .calendar-day-count {
-  color: var(--accent-text);
+  color: #174ea6;
   font-weight: 500;
 }
 .calendar-footer {
@@ -365,10 +302,10 @@ button, input, textarea { font: inherit; }
   gap: 10px;
   margin-top: 14px;
   padding-top: 12px;
-  border-top: 1px solid var(--surface-subtle);
+  border-top: 1px solid #f1f3f4;
 }
 .calendar-footer > span {
-  color: var(--text-tertiary);
+  color: #80868b;
   font-size: 11px;
 }
 .calendar-footer button {
@@ -393,305 +330,4 @@ button, input, textarea { font: inherit; }
   .calendar-day { min-height: 48px; padding: 3px; }
   .calendar-weekday { font-size: 10px; }
   .calendar-day-count { display: none; }
-}
-
-
-
-/* Dark mode changes tokens only; component rules remain shared. */
-html.dark-theme {
-  color-scheme: dark;
-  @include mat.theme((
-    color: (
-      theme-type: dark,
-      primary: mat.$azure-palette,
-      tertiary: mat.$blue-palette,
-    ),
-    typography: Roboto,
-    density: 0,
-  ));
-
-  --page-bg: #121417;
-  --sidebar-bg: #171a1e;
-  --surface: #1d2126;
-  --surface-raised: #20252b;
-  --surface-muted: #252a30;
-  --surface-subtle: #2b3139;
-  --surface-hover: #343d48;
-  --surface-dialog: #1e2329;
-  --surface-overlay: #252b32;
-  --surface-calendar-day: #252a31;
-  --surface-calendar-outside: #1b1f24;
-  --surface-calendar-selected: #25364c;
-
-  --text-primary: #edf1f6;
-  --text-secondary: #b9c3cf;
-  --text-tertiary: #a4aebb;
-  --text-disabled: #8994a2;
-  --text-inverse: #142033;
-
-  --border-color: #3a414b;
-  --border-soft: #303741;
-  --border-hover: #657182;
-
-  --accent: #8ab4f8;
-  --accent-text: #b7d2ff;
-  --accent-container: #263b59;
-  --accent-container-soft: #25364c;
-  --accent-surface: #1a2736;
-  --accent-border: #394b61;
-  --on-accent: #142033;
-
-  --selected-surface: #334150;
-  --selected-text: #f0f4fa;
-  --selected-icon: #c8dcf4;
-
-  --brand-accent: #ffca5c;
-  --brand-accent-soft: #4c411f;
-  --success: #81c995;
-  --success-text: #a8dab5;
-  --success-container: #1e3a2b;
-  --success-container-text: #a8dab5;
-  --danger: #ff8a80;
-  --danger-container: #512b2b;
-  --danger-container-text: #ffb4ab;
-
-  --bulk-surface: #1a2736;
-  --bulk-border: #394b61;
-  --bulk-text: #e0e8f2;
-  --bulk-meta: #d2deed;
-  --bulk-danger: #ffb4ab;
-  --progress-track: rgba(230, 237, 245, .18);
-  --focus-ring: #9bc2ff;
-
-  --note-card-text: #edf1f6;
-  --note-card-border: rgba(225, 232, 240, .28);
-  --note-card-footer-border: rgba(255, 255, 255, .16);
-  --note-card-chip-border: rgba(230, 237, 245, .16);
-  --note-card-chip-surface: rgba(255, 255, 255, .12);
-  --note-card-chip-text: #e4eaf2;
-  --note-card-reminder-surface: rgba(0, 0, 0, .2);
-  --note-card-reminder-text: #e3eaf3;
-  --note-card-reminder-today-surface: #263f5d;
-  --note-card-reminder-today-text: #d6e6ff;
-  --note-card-reminder-overdue-surface: #5a3033;
-  --note-card-reminder-overdue-text: #ffd6d0;
-  --note-card-progress-track: rgba(255, 255, 255, .18);
-  --note-card-progress-fill: #81c995;
-  --note-card-checkbox-text: #edf1f6;
-  --note-card-checkbox-icon: #bdc8d6;
-  --color-swatch-check-bg: rgba(24, 29, 35, .9);
-
-  --ink: var(--text-primary);
-  --muted: var(--text-secondary);
-  --outline: var(--border-color);
-  --outline-soft: var(--border-soft);
-  --google-blue: var(--accent);
-  --google-blue-soft: var(--accent-container);
-  --google-yellow-soft: var(--selected-surface);
-  --note-default: var(--surface);
-}
-
-/* Angular Material overlays live outside component view trees. These shared
-   tokens style them consistently while still following the active theme. */
-.mat-mdc-dialog-container .mdc-dialog__surface,
-.mat-mdc-dialog-container .mat-mdc-dialog-surface {
-  border: 1px solid var(--border-color);
-  background: var(--surface-dialog) !important;
-  color: var(--text-primary);
-}
-.mat-mdc-menu-panel,
-.mat-mdc-select-panel,
-.mat-mdc-autocomplete-panel {
-  background: var(--surface-overlay);
-  color: var(--text-primary);
-}
-.mat-mdc-menu-item,
-.mat-mdc-option {
-  color: var(--text-primary);
-}
-.mat-mdc-menu-item .mat-icon,
-.mat-mdc-option .mat-pseudo-checkbox {
-  color: var(--text-secondary);
-}
-.mat-mdc-menu-item:hover,
-.mat-mdc-option:hover {
-  background: var(--surface-hover);
-}
-.mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled) {
-  background: var(--accent-container-soft);
-}
-
-.mat-mdc-form-field {
-  --mdc-outlined-text-field-input-text-color: var(--text-primary);
-  --mdc-outlined-text-field-label-text-color: var(--text-secondary);
-  --mdc-outlined-text-field-hover-outline-color: var(--border-hover);
-  --mdc-outlined-text-field-focus-outline-color: var(--focus-ring);
-  --mdc-outlined-text-field-outline-color: var(--border-color);
-  --mdc-outlined-text-field-input-text-placeholder-color: var(--text-tertiary);
-  --mat-form-field-enabled-select-arrow-color: var(--text-secondary);
-  --mat-form-field-focus-select-arrow-color: var(--accent);
-}
-.mat-mdc-form-field .mdc-notched-outline__leading,
-.mat-mdc-form-field .mdc-notched-outline__notch,
-.mat-mdc-form-field .mdc-notched-outline__trailing {
-  border-color: var(--border-color);
-}
-.mat-mdc-form-field.mat-focused .mdc-notched-outline__leading,
-.mat-mdc-form-field.mat-focused .mdc-notched-outline__notch,
-.mat-mdc-form-field.mat-focused .mdc-notched-outline__trailing {
-  border-color: var(--accent);
-}
-.mat-mdc-form-field input,
-.mat-mdc-form-field textarea,
-.mat-mdc-select-value,
-.mat-mdc-form-field .mat-mdc-floating-label,
-.mat-mdc-select-arrow,
-.mat-mdc-select-placeholder,
-.mat-mdc-select-value-text {
-  color: var(--text-primary);
-}
-.mat-mdc-form-field-hint,
-.mat-mdc-form-field-subscript-wrapper {
-  color: var(--text-secondary);
-}
-
-.mat-mdc-checkbox {
-  --mdc-checkbox-label-text-color: var(--text-primary);
-  --mdc-checkbox-unselected-icon-color: var(--text-secondary);
-  --mdc-checkbox-unselected-hover-icon-color: var(--text-primary);
-  --mdc-checkbox-selected-checkmark-color: var(--text-inverse);
-}
-.mat-mdc-checkbox .mdc-label,
-.mat-mdc-radio-button .mdc-label {
-  color: var(--text-primary);
-}
-.mat-mdc-chip,
-.mat-mdc-standard-chip {
-  --mdc-chip-label-text-color: var(--text-primary);
-  --mdc-chip-with-trailing-icon-trailing-icon-color: var(--text-secondary);
-}
-.mat-mdc-chip-option,
-.mat-mdc-chip-option .mdc-evolution-chip__text-label {
-  color: var(--text-primary);
-}
-.mat-mdc-chip-option.mdc-evolution-chip--selected {
-  background: var(--accent-container);
-  --mdc-chip-label-text-color: var(--accent-text);
-}
-.mat-mdc-button-base:disabled,
-.mat-mdc-button-base[disabled] { opacity: .58; }
-
-.mat-mdc-snack-bar-container {
-  --mdc-snackbar-container-color: var(--surface-overlay);
-  --mdc-snackbar-supporting-text-color: var(--text-primary);
-  --mat-snack-bar-button-color: var(--accent-text);
-  --mdc-text-button-label-text-color: var(--accent-text);
-  --mat-text-button-label-text-color: var(--accent-text);
-}
-.mat-mdc-snack-bar-container .mat-mdc-snack-bar-action,
-.mat-mdc-snack-bar-container .mat-mdc-snack-bar-action .mdc-button__label {
-  color: var(--accent-text) !important;
-  font-weight: 600;
-}
-.mat-mdc-tooltip {
-  --mdc-plain-tooltip-container-color: var(--surface-overlay);
-  --mdc-plain-tooltip-supporting-text-color: var(--text-primary);
-  --mat-tooltip-container-color: var(--surface-overlay);
-  --mat-tooltip-supporting-text-color: var(--text-primary);
-}
-.mat-mdc-tooltip .mdc-tooltip__surface {
-  border: 1px solid var(--border-color);
-  background: var(--surface-overlay) !important;
-  color: var(--text-primary) !important;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, .24);
-}
-.mat-divider { border-top-color: var(--border-color); }
-html.dark-theme input,
-html.dark-theme textarea,
-html.dark-theme select { color-scheme: dark; }
-html.dark-theme input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(.8); }
-html.dark-theme ::selection { color: #f4f7fb; background: #365b86; }
-
-/* A note's tint is calculated from its saved color in the component. Text and
-   supporting controls use one high-contrast foreground on those dark tints. */
-html.dark-theme .note-card.note-card-dark {
-  color: var(--note-card-text);
-  border-color: var(--note-card-border) !important;
-}
-html.dark-theme .note-card.note-card-dark .note-body,
-html.dark-theme .note-card.note-card-dark .note-title,
-html.dark-theme .note-card.note-card-dark .note-text,
-html.dark-theme .note-card.note-card-dark .card-action,
-html.dark-theme .note-card.note-card-dark .note-pinned,
-html.dark-theme .note-card.note-card-dark .note-archived,
-html.dark-theme .note-card.note-card-dark .note-shared-role,
-html.dark-theme .note-card.note-card-dark .note-footer,
-html.dark-theme .note-card.note-card-dark .checklist-preview,
-html.dark-theme .note-card.note-card-dark .checklist-preview .mdc-label {
-  color: var(--note-card-text) !important;
-}
-html.dark-theme .note-card.note-card-dark .note-footer {
-  border-top-color: var(--note-card-footer-border);
-}
-html.dark-theme .note-card.note-card-dark .note-tags mat-chip {
-  border-color: var(--note-card-chip-border);
-  background: var(--note-card-chip-surface);
-  color: var(--note-card-chip-text) !important;
-}
-html.dark-theme .note-card.note-card-dark .note-shared-role {
-  background: var(--note-card-chip-surface);
-}
-html.dark-theme .note-card.note-card-dark .note-reminder {
-  background: var(--note-card-reminder-surface);
-  color: var(--note-card-reminder-text);
-}
-html.dark-theme .note-card.note-card-dark .note-reminder.reminder-today {
-  background: var(--note-card-reminder-today-surface);
-  color: var(--note-card-reminder-today-text);
-}
-html.dark-theme .note-card.note-card-dark .note-reminder.reminder-overdue {
-  background: var(--note-card-reminder-overdue-surface);
-  color: var(--note-card-reminder-overdue-text);
-}
-html.dark-theme .note-card.note-card-dark .checklist-progress-track {
-  background: var(--note-card-progress-track);
-}
-html.dark-theme .note-card.note-card-dark .checklist-progress-track span {
-  background: var(--note-card-progress-fill);
-}
-html.dark-theme .note-card.note-card-dark .mat-mdc-checkbox {
-  --mdc-checkbox-label-text-color: var(--note-card-checkbox-text);
-  --mdc-checkbox-unselected-icon-color: var(--note-card-checkbox-icon);
-}
-html.dark-theme .note-card.note-card-dark .mat-mdc-checkbox .mdc-label {
-  color: #edf1f6;
-}
-
-/* The note-color selection indicator remains visible on pastel swatches. */
-html.dark-theme .color-options .color-option mat-icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 20px;
-  height: 20px;
-  border-radius: 50%;
-  padding: 1px;
-  color: var(--text-inverse) !important;
-  background: var(--color-swatch-check-bg);
-  box-shadow: 0 1px 3px rgba(0, 0, 0, .45);
-  font-size: 17px;
-  line-height: 20px;
-}
-
-@media (prefers-reduced-motion: no-preference) {
-  body,
-  .sidebar,
-  .main-content,
-  .topbar,
-  .auth-card,
-  .note-card,
-  .reminder-calendar,
-  .reminder-summary {
-    transition: background-color .18s ease, border-color .18s ease, color .18s ease;
-  }
 }

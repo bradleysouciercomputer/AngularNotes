@@ -5,9 +5,6 @@
   </main>
 } @else if (recoveryMode()) {
   <main class="auth-page">
-    <button mat-icon-button class="auth-theme-toggle" type="button" (click)="toggleDarkMode()" [attr.aria-label]="darkMode() ? 'Switch to light mode' : 'Switch to dark mode'" [matTooltip]="darkMode() ? 'Switch to light mode' : 'Switch to dark mode'">
-      <mat-icon>{{ darkMode() ? 'light_mode' : 'dark_mode' }}</mat-icon>
-    </button>
     <mat-card class="auth-card">
       <div class="auth-brand-mark"><mat-icon>lightbulb</mat-icon></div>
       <h1>Choose a new password</h1>
@@ -27,9 +24,6 @@
   </main>
 } @else if (!currentUser()) {
   <main class="auth-page">
-    <button mat-icon-button class="auth-theme-toggle" type="button" (click)="toggleDarkMode()" [attr.aria-label]="darkMode() ? 'Switch to light mode' : 'Switch to dark mode'" [matTooltip]="darkMode() ? 'Switch to light mode' : 'Switch to dark mode'">
-      <mat-icon>{{ darkMode() ? 'light_mode' : 'dark_mode' }}</mat-icon>
-    </button>
     <mat-card class="auth-card">
       <div class="auth-brand-mark"><mat-icon>lightbulb</mat-icon></div>
       <h1>{{ authMode() === 'signup' ? 'Create your account' : 'Welcome back' }}</h1>
@@ -169,9 +163,6 @@
       </mat-form-field>
 
       <span class="toolbar-spacer"></span>
-      <button mat-icon-button class="toolbar-action theme-toggle" type="button" (click)="toggleDarkMode()" [attr.aria-label]="darkMode() ? 'Switch to light mode' : 'Switch to dark mode'" [matTooltip]="darkMode() ? 'Switch to light mode' : 'Switch to dark mode'">
-        <mat-icon>{{ darkMode() ? 'light_mode' : 'dark_mode' }}</mat-icon>
-      </button>
       <button mat-button class="account-button" [matMenuTriggerFor]="accountMenu" aria-label="Account options">
         <mat-icon>account_circle</mat-icon>
         <span>{{ currentUser()?.email }}</span>
@@ -399,9 +390,7 @@
           [cdkDragData]="note"
           *ngFor="let note of visibleNotes(); trackBy: trackById"
           [class.note-selected]="selectionMode() && isNoteSelected(note.id)"
-          [class.note-card-default]="!note.color || note.color === '#ffffff'"
-          [class.note-card-dark]="darkMode()"
-          [style.background-color]="noteCardBackground(note)">
+          [style.background-color]="note.color || '#ffffff'">
           <div class="note-card-top">
             <button
               *ngIf="canReorderNotes()"
