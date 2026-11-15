@@ -400,7 +400,8 @@
           *ngFor="let note of visibleNotes(); trackBy: trackById"
           [class.note-selected]="selectionMode() && isNoteSelected(note.id)"
           [class.note-card-default]="!note.color || note.color === '#ffffff'"
-          [style.background-color]="darkMode() && (!note.color || note.color === '#ffffff') ? '#25292f' : note.color || '#ffffff'">
+          [class.note-card-dark]="darkMode()"
+          [style.background-color]="noteCardBackground(note)">
           <div class="note-card-top">
             <button
               *ngIf="canReorderNotes()"

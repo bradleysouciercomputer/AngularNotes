@@ -43,6 +43,18 @@ const NOTE_COLOR_OPTIONS = [
   { label: 'Gray', value: '#f1f3f4' }
 ];
 const NOTE_COLORS: string[] = NOTE_COLOR_OPTIONS.map((option) => option.value);
+const DARK_NOTE_COLORS: Record<string, string> = {
+  '#ffffff': '#252a31',
+  '#fce8e6': '#4b3033',
+  '#fef1e1': '#4c3929',
+  '#fef7d1': '#4d4526',
+  '#e6f4ea': '#294333',
+  '#e4f7f5': '#294544',
+  '#e8f0fe': '#2b405b',
+  '#f3e8fd': '#443451',
+  '#fce8f3': '#4b3040',
+  '#f1f3f4': '#353c45'
+};
 
 function starterNotes(): Note[] {
   const now = Date.now();
@@ -379,6 +391,11 @@ export class AppComponent {
 
     if (typeof window !== 'undefined') window.setInterval(() => this.checkDueReminders(), 60_000);
     void this.initializeAuth();
+  }
+
+  noteCardBackground(note: Note): string {
+    const color = note.color || '#ffffff';
+    return this.darkMode() ? (DARK_NOTE_COLORS[color] || '#252a31') : color;
   }
 
   toggleDarkMode(): void {

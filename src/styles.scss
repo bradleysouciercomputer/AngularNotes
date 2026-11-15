@@ -620,3 +620,205 @@ html.dark-theme .mat-mdc-icon-button { color: inherit; }
     transition: background-color .18s ease, border-color .18s ease, color .18s ease;
   }
 }
+
+
+/* Dark-mode contrast audit: application controls and secondary UI text */
+html.dark-theme .empty-trash,
+html.dark-theme .note-card .card-action .favorite-active {
+  color: #ff8a80 !important;
+}
+html.dark-theme .type-filter-label,
+html.dark-theme .note-drag-handle,
+html.dark-theme .note-card .checklist-progress,
+html.dark-theme .note-card .note-date,
+html.dark-theme .note-card .note-pinned,
+html.dark-theme .note-card .note-archived {
+  color: #b9c3cf;
+}
+html.dark-theme .checklist-complete { color: #aeb8c5; }
+html.dark-theme .select-mode-toggle.select-mode-active {
+  color: #b7d2ff;
+  background: #283d58;
+}
+html.dark-theme .bulk-toolbar .bulk-delete { color: #ffb4ab; }
+html.dark-theme .bulk-toolbar .bulk-delete:disabled,
+html.dark-theme .bulk-toolbar .bulk-delete[disabled],
+html.dark-theme .bulk-toolbar .bulk-delete.mat-mdc-button-disabled,
+html.dark-theme .bulk-toolbar .bulk-delete.mdc-button--disabled {
+  color: rgba(220, 228, 238, .38) !important;
+  --mdc-text-button-label-text-color: rgba(220, 228, 238, .38);
+  --mat-text-button-label-text-color: rgba(220, 228, 238, .38);
+}
+html.dark-theme .bulk-toolbar .bulk-delete:disabled mat-icon,
+html.dark-theme .bulk-toolbar .bulk-delete[disabled] mat-icon,
+html.dark-theme .bulk-toolbar .bulk-delete.mat-mdc-button-disabled mat-icon {
+  color: inherit !important;
+}
+html.dark-theme .bulk-color-swatch { border-color: rgba(230, 237, 245, .38); }
+html.dark-theme .note-card.note-card-dark {
+  color: #edf1f6;
+  border-color: rgba(225, 232, 240, .25) !important;
+}
+html.dark-theme .note-card.note-card-dark .note-body,
+html.dark-theme .note-card.note-card-dark .note-title,
+html.dark-theme .note-card.note-card-dark .note-text,
+html.dark-theme .note-card.note-card-dark .card-action,
+html.dark-theme .note-card.note-card-dark .note-pinned,
+html.dark-theme .note-card.note-card-dark .note-archived,
+html.dark-theme .note-card.note-card-dark .note-shared-role,
+html.dark-theme .note-card.note-card-dark .note-footer,
+html.dark-theme .note-card.note-card-dark .checklist-preview,
+html.dark-theme .note-card.note-card-dark .checklist-preview .mdc-label {
+  color: #edf1f6 !important;
+}
+html.dark-theme .note-card.note-card-dark .note-footer { border-top-color: rgba(255, 255, 255, .16); }
+html.dark-theme .note-card.note-card-dark .note-tags mat-chip {
+  border-color: rgba(230, 237, 245, .14);
+  background: rgba(255, 255, 255, .12);
+  color: #e4eaf2 !important;
+}
+html.dark-theme .note-card.note-card-dark .note-shared-role {
+  background: rgba(255, 255, 255, .14);
+}
+html.dark-theme .note-card.note-card-dark .note-reminder {
+  background: rgba(0, 0, 0, .2);
+  color: #e3eaf3;
+}
+html.dark-theme .note-card.note-card-dark .note-reminder.reminder-today {
+  background: #263f5d;
+  color: #d6e6ff;
+}
+html.dark-theme .note-card.note-card-dark .note-reminder.reminder-overdue {
+  background: #5a3033;
+  color: #ffd6d0;
+}
+html.dark-theme .note-card.note-card-dark .checklist-progress-track {
+  background: rgba(255, 255, 255, .18);
+}
+html.dark-theme .note-card.note-card-dark .checklist-progress-track span { background: #81c995; }
+html.dark-theme .note-card.note-card-dark .mat-mdc-checkbox {
+  --mdc-checkbox-label-text-color: #edf1f6;
+  --mdc-checkbox-unselected-icon-color: #bdc8d6;
+}
+html.dark-theme .note-card.note-card-dark .mat-mdc-checkbox .mdc-label { color: #edf1f6; }
+
+html.dark-theme .editor-count,
+html.dark-theme .editor-count-shortcut,
+html.dark-theme .checklist-tools button,
+html.dark-theme .add-checklist-item,
+html.dark-theme .reminder-presets button,
+html.dark-theme .sharing-empty,
+html.dark-theme .viewer-empty {
+  color: #aeb8c5;
+}
+html.dark-theme .sharing-list-heading > span,
+html.dark-theme .sharing-avatar {
+  border: 1px solid #414a56;
+}
+html.dark-theme .sharing-person-role .mat-mdc-select-value,
+html.dark-theme .sharing-person-role .mat-mdc-select-arrow {
+  color: #e2e8f0;
+}
+html.dark-theme .viewer-item-complete { color: #aab4c1; }
+html.dark-theme .viewer-checklist-item mat-icon { color: #bdc7d3; }
+
+/* Material controls: make labels, values, outlines and states readable in dark mode. */
+html.dark-theme .mat-mdc-form-field {
+  --mdc-outlined-text-field-input-text-color: #e7ecf3;
+  --mdc-outlined-text-field-label-text-color: #aeb9c6;
+  --mdc-outlined-text-field-hover-outline-color: #9aa8b8;
+  --mdc-outlined-text-field-focus-outline-color: #9bc2ff;
+  --mdc-outlined-text-field-outline-color: #586372;
+  --mdc-outlined-text-field-input-text-placeholder-color: #aeb9c6;
+  --mat-form-field-enabled-select-arrow-color: #b7c2cf;
+  --mat-form-field-focus-select-arrow-color: #9bc2ff;
+}
+html.dark-theme .mat-mdc-form-field .mdc-notched-outline__leading,
+html.dark-theme .mat-mdc-form-field .mdc-notched-outline__notch,
+html.dark-theme .mat-mdc-form-field .mdc-notched-outline__trailing {
+  border-color: #586372;
+}
+html.dark-theme .mat-mdc-form-field.mat-focused .mdc-notched-outline__leading,
+html.dark-theme .mat-mdc-form-field.mat-focused .mdc-notched-outline__notch,
+html.dark-theme .mat-mdc-form-field.mat-focused .mdc-notched-outline__trailing {
+  border-color: #9bc2ff;
+}
+html.dark-theme .mat-mdc-form-field .mat-mdc-select-arrow,
+html.dark-theme .mat-mdc-select-arrow,
+html.dark-theme .mat-mdc-select-placeholder,
+html.dark-theme .mat-mdc-select-value-text { color: #dce4ee; }
+html.dark-theme .mat-mdc-form-field-hint,
+html.dark-theme .mat-mdc-form-field-error,
+html.dark-theme .mat-mdc-form-field-subscript-wrapper { color: #aeb8c5; }
+html.dark-theme .mat-mdc-checkbox {
+  --mdc-checkbox-label-text-color: #dfe6ef;
+  --mdc-checkbox-unselected-icon-color: #b7c2cf;
+  --mdc-checkbox-unselected-hover-icon-color: #d5dfeb;
+  --mdc-checkbox-selected-checkmark-color: #152235;
+}
+html.dark-theme .mat-mdc-checkbox .mdc-label,
+html.dark-theme .mat-mdc-radio-button .mdc-label { color: #dfe6ef; }
+html.dark-theme .mat-mdc-chip,
+html.dark-theme .mat-mdc-standard-chip {
+  --mdc-chip-label-text-color: #dce4ed;
+  --mdc-chip-with-trailing-icon-trailing-icon-color: #c2ccda;
+}
+html.dark-theme .mat-mdc-chip-option,
+html.dark-theme .mat-mdc-chip-option .mdc-evolution-chip__text-label { color: #dce4ed; }
+html.dark-theme .mat-mdc-chip-option.mdc-evolution-chip--selected {
+  background: #29415f;
+  --mdc-chip-label-text-color: #dceaff;
+}
+html.dark-theme .mat-mdc-menu-item .mat-mdc-menu-item-text,
+html.dark-theme .mat-mdc-option .mdc-list-item__primary-text { color: #e5eaf1; }
+html.dark-theme .mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled) {
+  background: #2c415d;
+}
+html.dark-theme .mat-mdc-menu-item.mat-mdc-menu-item-disabled,
+html.dark-theme .mat-mdc-option.mdc-list-item--disabled { color: #8994a2; }
+html.dark-theme .mat-mdc-button-base:disabled,
+html.dark-theme .mat-mdc-button-base[disabled] { opacity: .58; }
+html.dark-theme input,
+html.dark-theme textarea,
+html.dark-theme select {
+  color-scheme: dark;
+}
+html.dark-theme input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(.8); }
+html.dark-theme ::selection { color: #f4f7fb; background: #365b86; }
+
+/* Dialog-specific content lives in separate standalone components. */
+html.dark-theme .editor-heading h2,
+html.dark-theme .sharing-heading h2,
+html.dark-theme .sharing-list-heading h3,
+html.dark-theme .viewer-heading h2 { color: #edf1f6 !important; }
+html.dark-theme .editor-title,
+html.dark-theme .editor-body,
+html.dark-theme .editor-checklist-row input,
+html.dark-theme .reminder-field input[type="date"],
+html.dark-theme .viewer-note-text,
+html.dark-theme .viewer-checklist-item,
+html.dark-theme .sharing-person-email { color: #e6ecf4 !important; }
+html.dark-theme .editor-title::placeholder,
+html.dark-theme .editor-body::placeholder { color: #9aa7b6; opacity: 1; }
+html.dark-theme .editor-checklist-row input.item-checked,
+html.dark-theme .sharing-note-title,
+html.dark-theme .sharing-description,
+html.dark-theme .sharing-explainer,
+html.dark-theme .viewer-access,
+html.dark-theme .viewer-reminder,
+html.dark-theme .reminder-presets > span,
+html.dark-theme .color-label { color: #b5c0cd !important; }
+html.dark-theme .editor-type-switch { background: #2c333c; }
+html.dark-theme .editor-type-switch button { color: #c3ccd7; }
+html.dark-theme .editor-type-switch button.type-active {
+  background: #46515e;
+  color: #f2f5f9;
+}
+html.dark-theme .editor-checklist-row { border-bottom-color: #3a424d; }
+html.dark-theme .color-option { border-color: rgba(230, 237, 245, .42); }
+html.dark-theme .color-selected { outline-color: #9bc2ff; }
+html.dark-theme .sharing-explainer { background: #2a323c; }
+html.dark-theme .sharing-error { color: #ffb4ab; background: #512b2b; }
+html.dark-theme .sharing-message { color: #a8dab5; background: #1e3a2b; }
+html.dark-theme .viewer-updated { border-top-color: #39414b; color: #aeb8c5; }
+html.dark-theme .viewer-item-complete { color: #aeb8c5; }
