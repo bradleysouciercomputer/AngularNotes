@@ -29,6 +29,7 @@ export type SortMode = 'updated' | 'updated-asc' | 'created' | 'created-asc' | '
 export type NoteTypeFilter = 'all' | 'text' | 'checklist';
 
 const STORAGE_KEY = 'angularnotes.notes.v1';
+const THEME_STORAGE_KEY = 'angularnotes.theme.v1';
 const NOTE_COLOR_OPTIONS = [
   { label: 'Default', value: '#ffffff' },
   { label: 'Red', value: '#fce8e6' },
@@ -112,6 +113,14 @@ function readStoredNotes(): Note[] {
   }
 }
 
+function readDarkModePreference(): boolean {
+  try {
+    return typeof localStorage !== 'undefined' && localStorage.getItem(THEME_STORAGE_KEY) === 'dark';
+  } catch {
+    return false;
+  }
+}
+
 @Component({
   selector: 'app-root',
   standalone: true,
@@ -136,6 +145,7 @@ export class AppComponent {
   readonly noteColorOptions = NOTE_COLOR_OPTIONS;
   readonly layoutMode = signal<'grid' | 'list'>('grid');
   readonly notes = signal<Note[]>(readStoredNotes());
+  readonly darkMode = signal(readDarkModePreference());
   readonly authReady = signal(false);
   readonly currentUser = signal<User | null>(null);
   readonly authMode = signal<'signin' | 'signup'>('signin');
@@ -336,6 +346,8 @@ export class AppComponent {
   });
 
   constructor() {
+    this.applyTheme(this.darkMode());
+
     effect(() => {
       const user = this.currentUser();
       const ready = this.cloudSyncReady() || this.cloudStatus() === 'error';
@@ -367,6 +379,23 @@ export class AppComponent {
 
     if (typeof window !== 'undefined') window.setInterval(() => this.checkDueReminders(), 60_000);
     void this.initializeAuth();
+  }
+
+  toggleDarkMode(): void {
+    const enabled = !this.darkMode();
+    this.darkMode.set(enabled);
+    this.applyTheme(enabled);
+    try {
+      localStorage.setItem(THEME_STORAGE_KEY, enabled ? 'dark' : 'light');
+    } catch {
+      // The theme remains active for this session if storage is unavailable.
+    }
+  }
+
+  private applyTheme(enabled: boolean): void {
+    if (typeof document === 'undefined') return;
+    document.documentElement.classList.toggle('dark-theme', enabled);
+    document.documentElement.style.colorScheme = enabled ? 'dark' : 'light';
   }
 
   private userStorageKey(userId: string): string {
