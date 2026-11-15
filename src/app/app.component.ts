@@ -24,7 +24,7 @@ import { SupabaseService } from './supabase.service';
 import { NoteSharingDialogComponent } from './note-sharing-dialog.component';
 import { NoteViewerDialogComponent } from './note-viewer-dialog.component';
 
-export type NoteView = 'all' | 'recent' | 'favorites' | 'pinned' | 'reminders' | 'today' | 'upcoming' | 'archive' | 'trash' | 'shared';
+export type NoteView = 'all' | 'recent' | 'favorites' | 'pinned' | 'reminders' | 'today' | 'upcoming' | 'calendar' | 'archive' | 'trash' | 'shared';
 export type SortMode = 'updated' | 'updated-asc' | 'created' | 'created-asc' | 'title' | 'title-desc' | 'reminder' | 'manual';
 export type NoteTypeFilter = 'all' | 'text' | 'checklist';
 
@@ -149,6 +149,38 @@ export class AppComponent {
   readonly cloudStatus = signal<'loading' | 'saving' | 'saved' | 'error' | 'idle'>('loading');
   readonly cloudSyncReady = signal(false);
   readonly desktopRemindersEnabled = signal(false);
+  readonly calendarMonth = signal(new Date(new Date().getFullYear(), new Date().getMonth(), 1));
+  readonly calendarSelectedDate = signal(this.localDateString());
+  readonly calendarWeekdays = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+  readonly calendarMonthLabel = computed(() => new Intl.DateTimeFormat(undefined, { month: 'long', year: 'numeric' }).format(this.calendarMonth()));
+  readonly calendarSelectedDateLabel = computed(() => {
+    const [year, month, day] = this.calendarSelectedDate().split('-').map(Number);
+    return new Intl.DateTimeFormat(undefined, { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' })
+      .format(new Date(year, month - 1, day));
+  });
+  readonly calendarDays = computed(() => {
+    const month = this.calendarMonth();
+    const monthStart = new Date(month.getFullYear(), month.getMonth(), 1);
+    const gridStart = new Date(month.getFullYear(), month.getMonth(), 1 - monthStart.getDay());
+    const currentUserId = this.currentUser()?.id;
+    const allNotes = this.notes();
+    const today = this.localDateString();
+    return Array.from({ length: 42 }, (_, index) => {
+      const date = new Date(gridStart.getFullYear(), gridStart.getMonth(), gridStart.getDate() + index);
+      const dateKey = this.localDateString(date);
+      const reminderCount = allNotes.filter((note) =>
+        (!note.ownerId || note.ownerId === currentUserId) &&
+        !note.archived && !note.trashed && note.reminderDate === dateKey
+      ).length;
+      return {
+        dateKey,
+        day: date.getDate(),
+        inCurrentMonth: date.getMonth() === month.getMonth(),
+        isToday: dateKey === today,
+        reminderCount
+      };
+    });
+  });
   private activeUserId: string | null | undefined;
   private activatingUserId: string | null | undefined;
   private authGeneration = 0;
@@ -192,7 +224,7 @@ export class AppComponent {
     if (tag) return tag;
     return ({
       all: 'Notes', recent: 'Recent', favorites: 'Favorites',
-      pinned: 'Pinned', reminders: 'Reminders', today: 'Today', upcoming: 'Upcoming', archive: 'Archive', trash: 'Trash', shared: 'Shared with me'
+      pinned: 'Pinned', reminders: 'Reminders', today: 'Today', upcoming: 'Upcoming', calendar: 'Calendar', archive: 'Archive', trash: 'Trash', shared: 'Shared with me'
     })[this.activeView()];
   });
 
@@ -229,6 +261,7 @@ export class AppComponent {
       if (selectedView === 'reminders' && !note.reminderDate) return false;
       if (selectedView === 'today' && (!note.reminderDate || note.reminderDate > today)) return false;
       if (selectedView === 'upcoming' && (!note.reminderDate || note.reminderDate <= today || note.reminderDate > upcomingLimit)) return false;
+      if (selectedView === 'calendar' && note.reminderDate !== this.calendarSelectedDate()) return false;
       if (selectedView === 'favorites' && !note.favorite) return false;
       if (selectedView === 'pinned' && !note.pinned) return false;
       if (selectedView === 'recent' && Date.now() - note.updatedAt > 1000 * 60 * 60 * 24 * 14) return false;
@@ -600,6 +633,10 @@ export class AppComponent {
     const currentUserId = this.currentUser()?.id;
     if (view === 'shared') return allNotes.filter((note) => Boolean(note.ownerId && note.ownerId !== currentUserId) && !note.trashed).length;
     const notes = allNotes.filter((note) => !note.ownerId || note.ownerId === currentUserId);
+    if (view === 'calendar') {
+      const selectedDate = this.calendarSelectedDate();
+      return notes.filter((note) => note.reminderDate === selectedDate && !note.archived && !note.trashed).length;
+    }
     if (view === 'trash') return notes.filter((note) => note.trashed).length;
     if (view === 'archive') return notes.filter((note) => note.archived && !note.trashed).length;
     if (view === 'favorites') return notes.filter((note) => note.favorite && !note.archived && !note.trashed).length;
@@ -1012,6 +1049,45 @@ export class AppComponent {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     return year + '-' + month + '-' + day;
+  }
+
+  changeCalendarMonth(offset: number): void {
+    const current = this.calendarMonth();
+    this.calendarMonth.set(new Date(current.getFullYear(), current.getMonth() + offset, 1));
+  }
+
+  goToCalendarToday(): void {
+    const today = new Date();
+    this.calendarMonth.set(new Date(today.getFullYear(), today.getMonth(), 1));
+    this.calendarSelectedDate.set(this.localDateString(today));
+  }
+
+  selectCalendarDay(day: { dateKey: string; inCurrentMonth: boolean }): void {
+    this.calendarSelectedDate.set(day.dateKey);
+    if (!day.inCurrentMonth) {
+      const [year, month] = day.dateKey.split('-').map(Number);
+      this.calendarMonth.set(new Date(year, month - 1, 1));
+    }
+  }
+
+  createNoteForCalendarDate(): void {
+    const now = Date.now();
+    this.openEditor({
+      id: this.makeId(),
+      title: '',
+      content: '',
+      tags: [],
+      color: '#ffffff',
+      type: 'text',
+      checklistItems: [],
+      pinned: false,
+      favorite: false,
+      archived: false,
+      trashed: false,
+      reminderDate: this.calendarSelectedDate(),
+      createdAt: now,
+      updatedAt: now
+    });
   }
 
   isReminderOverdue(note: Note): boolean {
