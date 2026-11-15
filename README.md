@@ -24,6 +24,7 @@ AngularNotes is a clean, responsive note-taking app built with **Angular 22** an
 - Create notes from Meeting, Daily journal, Project plan, Shopping list, Recipe, Reading list, and Travel plan templates
 - Set a reminder date on any note with Today, Tomorrow, and Next week quick presets
 - Use dedicated Today (overdue and due today) and Upcoming (next seven days) reminder collections
+- Browse a monthly reminder calendar, see the number of reminders on each day, and create a note with a reminder prefilled for the selected date
 - Snooze a reminder until tomorrow or one week from a note's actions menu
 - Enable optional desktop notifications for due reminders; notifications are sent once per reminder date while the app is open, and overdue reminders are checked when you return
 - View live word and character counts while editing, and save with Ctrl/⌘ + Enter
