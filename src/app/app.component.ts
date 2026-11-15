@@ -1262,7 +1262,7 @@ export class AppComponent {
       disableClose: true,
       panelClass: 'material-web-dialog-host'
     });
-    ref.afterClosed().subscribe(async (changed) => {
+    ref.closed.subscribe(async (changed) => {
       if (!changed || !this.currentUser()) return;
       try {
         const refreshed = await this.supabase.loadNotes(user.id);
@@ -1469,9 +1469,8 @@ export class AppComponent {
     if (!modifier || event.altKey) return;
     if (key === 'k') {
       event.preventDefault();
-      const search = document.querySelector<HTMLInputElement>('.search-field input');
+      const search = document.querySelector<HTMLElement>('md-outlined-text-field.search-field');
       search?.focus();
-      search?.select();
       return;
     }
 
