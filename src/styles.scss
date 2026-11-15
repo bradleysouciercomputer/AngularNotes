@@ -822,3 +822,67 @@ html.dark-theme .sharing-error { color: #ffb4ab; background: #512b2b; }
 html.dark-theme .sharing-message { color: #a8dab5; background: #1e3a2b; }
 html.dark-theme .viewer-updated { border-top-color: #39414b; color: #aeb8c5; }
 html.dark-theme .viewer-item-complete { color: #aeb8c5; }
+
+
+/* Final dark-mode polish for dialog controls, active navigation and overlays. */
+html.dark-theme .color-options .color-option mat-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  padding: 1px;
+  color: #ffffff !important;
+  background: rgba(24, 29, 35, .9);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, .45);
+  font-size: 17px;
+  line-height: 20px;
+}
+
+html.dark-theme .tags-field:not(.mat-focused) input::placeholder {
+  opacity: 0 !important;
+}
+html.dark-theme .tags-field.mat-focused input::placeholder {
+  color: #aeb9c6 !important;
+  opacity: 1 !important;
+}
+
+html.dark-theme .editor-type-switch button:not(.type-active),
+html.dark-theme .editor-type-switch button:not(.type-active) .mat-icon {
+  color: #dce5f0 !important;
+}
+html.dark-theme .editor-type-switch button.type-active,
+html.dark-theme .editor-type-switch button.type-active .mat-icon {
+  color: #ffffff !important;
+  background: #46515e;
+}
+
+html.dark-theme .primary-navigation button.nav-selected,
+html.dark-theme .primary-navigation button.nav-selected .mdc-list-item__primary-text,
+html.dark-theme .primary-navigation button.nav-selected [matListItemTitle] {
+  color: #f0f4fa !important;
+  background: #334150 !important;
+  font-weight: 600;
+}
+html.dark-theme .primary-navigation button.nav-selected mat-icon {
+  color: #c8dcf4 !important;
+}
+html.dark-theme .primary-navigation button.nav-selected:hover {
+  background: #3c4b5b !important;
+}
+
+html.dark-theme .cdk-overlay-container .mat-mdc-tooltip,
+html.dark-theme .mat-mdc-tooltip {
+  --mdc-plain-tooltip-container-color: #39434f;
+  --mdc-plain-tooltip-supporting-text-color: #f4f7fb;
+  --mat-tooltip-container-color: #39434f;
+  --mat-tooltip-supporting-text-color: #f4f7fb;
+}
+html.dark-theme .cdk-overlay-container .mat-mdc-tooltip .mdc-tooltip__surface,
+html.dark-theme .mat-mdc-tooltip .mdc-tooltip__surface {
+  border: 1px solid #566273;
+  background: #39434f !important;
+  color: #f4f7fb !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .35);
+}
