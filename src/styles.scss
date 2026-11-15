@@ -886,3 +886,31 @@ html.dark-theme .mat-mdc-tooltip .mdc-tooltip__surface {
   color: #f4f7fb !important;
   box-shadow: 0 4px 14px rgba(0, 0, 0, .35);
 }
+
+
+/* Final contrast fixes for snackbar actions and workspace heading text. */
+html.dark-theme .mat-mdc-snack-bar-container {
+  --mdc-snackbar-container-color: #303944;
+  --mdc-snackbar-supporting-text-color: #f1f5fa;
+  --mat-snack-bar-button-color: #c9ddff;
+  --mdc-text-button-label-text-color: #c9ddff;
+  --mat-text-button-label-text-color: #c9ddff;
+}
+html.dark-theme .mat-mdc-snack-bar-container .mat-mdc-snack-bar-action,
+html.dark-theme .mat-mdc-snack-bar-container .mat-mdc-snack-bar-action .mdc-button__label,
+html.dark-theme .mat-mdc-snack-bar-container .mat-mdc-snack-bar-action .mat-mdc-button-persistent-ripple {
+  color: #c9ddff !important;
+}
+html.dark-theme .mat-mdc-snack-bar-container .mat-mdc-snack-bar-action {
+  --mdc-text-button-label-text-color: #c9ddff;
+  --mat-text-button-label-text-color: #c9ddff;
+  font-weight: 600;
+}
+html.dark-theme .notes-heading,
+html.dark-theme .notes-heading h1 {
+  color: #f2f5f9 !important;
+}
+html.dark-theme .notes-heading span {
+  color: #c2ccd8 !important;
+  font-weight: 500;
+}
