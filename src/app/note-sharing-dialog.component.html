@@ -1,63 +1,76 @@
-<md-dialog open #materialDialog (closed)="onClosed()">
-  <div slot="headline" class="sharing-heading">
-    <div class="sharing-heading-copy">
-      <span class="dialog-eyebrow">COLLABORATION</span>
-      <h2>Share note</h2>
-      <p class="sharing-note-title">{{ data.note.title || 'Untitled note' }}</p>
-    </div>
-    <md-icon-button aria-label="Close sharing dialog" (click)="close()"><md-icon>close</md-icon></md-icon-button>
+<div class="sharing-heading">
+  <div>
+    <h2 mat-dialog-title>Share note</h2>
+    <p class="sharing-note-title">{{ data.note.title || 'Untitled note' }}</p>
+  </div>
+  <button mat-icon-button aria-label="Close sharing dialog" (click)="close()">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+
+<mat-dialog-content class="sharing-content">
+  <p class="sharing-description">Add people by email and choose what they can do with this note.</p>
+
+  <form class="sharing-invite-form" (ngSubmit)="addCollaborator()">
+    <mat-form-field appearance="outline" class="sharing-email">
+      <mat-label>Email address</mat-label>
+      <input matInput type="email" [ngModel]="email()" (ngModelChange)="email.set($event)" name="inviteEmail" autocomplete="off" required>
+      <mat-icon matSuffix>mail_outline</mat-icon>
+    </mat-form-field>
+    <mat-form-field appearance="outline" class="sharing-role">
+      <mat-label>Access</mat-label>
+      <mat-select [value]="role()" (selectionChange)="role.set($event.value)">
+        <mat-option value="viewer">Viewer</mat-option>
+        <mat-option value="editor">Editor</mat-option>
+      </mat-select>
+    </mat-form-field>
+    <button mat-flat-button color="primary" type="submit" [disabled]="saving() || !email().trim()">
+      <mat-icon>person_add</mat-icon>
+      Add
+    </button>
+  </form>
+
+  <div class="sharing-explainer">
+    <mat-icon>info</mat-icon>
+    <span>Collaborators must sign in to AngularNotes using this exact email address. They will then find the note in Shared with me. A separate email notification is not sent yet.</span>
   </div>
 
-  <div slot="content" class="sharing-content">
-    <p class="sharing-description">Add people by email and choose what they can do with this note.</p>
-    <form class="sharing-invite-form" (submit)="$event.preventDefault(); addCollaborator()">
-      <md-outlined-text-field class="sharing-email" label="Email address" type="email" [value]="email()" (input)="email.set($any($event.target).value)" required>
-        <md-icon slot="leading-icon">mail</md-icon>
-      </md-outlined-text-field>
-      <md-outlined-select class="sharing-role" label="Access" [value]="role()" (change)="role.set($any($event.target).value)">
-        <md-select-option value="viewer"><div slot="headline">Viewer</div></md-select-option>
-        <md-select-option value="editor"><div slot="headline">Editor</div></md-select-option>
-      </md-outlined-select>
-      <md-filled-button type="submit" [disabled]="saving() || !email().trim()">
-        <md-icon slot="icon">person_add</md-icon>Add
-      </md-filled-button>
-    </form>
+  @if (error()) { <div class="sharing-alert sharing-error" role="alert">{{ error() }}</div> }
+  @if (message()) { <div class="sharing-alert sharing-message" role="status">{{ message() }}</div> }
 
-    <div class="sharing-explainer">
-      <md-icon>info</md-icon>
-      <span>Collaborators must sign in to AngularNotes using this exact email address. They will then find the note in Shared with me. A separate email notification is not sent yet.</span>
-    </div>
-
-    @if (error()) { <div class="sharing-alert sharing-error" role="alert">{{ error() }}</div> }
-    @if (message()) { <div class="sharing-alert sharing-message" role="status">{{ message() }}</div> }
-
-    <div class="sharing-list-heading">
-      <h3>People with access</h3>
-      <span>{{ shares().length }}</span>
-    </div>
-
-    @if (loading()) {
-      <div class="sharing-empty">Loading collaborators…</div>
-    } @else if (!shares().length) {
-      <div class="sharing-empty"><md-icon>group_add</md-icon><span>This note is only shared with you.</span></div>
-    } @else {
-      <div class="sharing-list">
-        @for (share of shares(); track share.id) {
-          <div class="sharing-person">
-            <div class="sharing-avatar"><md-icon>person</md-icon></div>
-            <div class="sharing-person-email">{{ share.invited_email }}</div>
-            <md-outlined-select class="sharing-person-role" aria-label="Collaborator access" [value]="share.role" [disabled]="saving()" (change)="changeRole(share, $any($event.target).value)">
-              <md-select-option value="viewer"><div slot="headline">Viewer</div></md-select-option>
-              <md-select-option value="editor"><div slot="headline">Editor</div></md-select-option>
-            </md-outlined-select>
-            <md-icon-button type="button" aria-label="Remove collaborator" [disabled]="saving()" (click)="removeCollaborator(share)"><md-icon>person_remove</md-icon></md-icon-button>
-          </div>
-        }
-      </div>
-    }
+  <div class="sharing-list-heading">
+    <h3>People with access</h3>
+    <span>{{ shares().length }}</span>
   </div>
 
-  <div slot="actions" class="dialog-actions">
-    <md-text-button (click)="close()">Done</md-text-button>
-  </div>
-</md-dialog>
+  @if (loading()) {
+    <div class="sharing-empty">Loading collaborators...</div>
+  } @else if (!shares().length) {
+    <div class="sharing-empty">
+      <mat-icon>group_add</mat-icon>
+      <span>This note is only shared with you.</span>
+    </div>
+  } @else {
+    <div class="sharing-list">
+      @for (share of shares(); track share.id) {
+        <div class="sharing-person">
+          <div class="sharing-avatar"><mat-icon>person_outline</mat-icon></div>
+          <div class="sharing-person-email">{{ share.invited_email }}</div>
+          <mat-form-field appearance="outline" subscriptSizing="dynamic" class="sharing-person-role">
+            <mat-select [value]="share.role" aria-label="Collaborator access" [disabled]="saving()" (selectionChange)="changeRole(share, $event.value)">
+              <mat-option value="viewer">Viewer</mat-option>
+              <mat-option value="editor">Editor</mat-option>
+            </mat-select>
+          </mat-form-field>
+          <button mat-icon-button type="button" aria-label="Remove collaborator" matTooltip="Remove access" [disabled]="saving()" (click)="removeCollaborator(share)">
+            <mat-icon>person_remove</mat-icon>
+          </button>
+        </div>
+      }
+    </div>
+  }
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="close()">Done</button>
+</mat-dialog-actions>

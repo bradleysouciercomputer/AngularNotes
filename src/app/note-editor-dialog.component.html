@@ -1,90 +1,94 @@
-<md-dialog open #materialDialog (closed)="onClosed()">
-  <div slot="headline" class="editor-heading">
-    <div class="editor-heading-text">
-      <span class="dialog-eyebrow">{{ data.title ? 'YOUR WORKSPACE' : 'NEW ENTRY' }}</span>
-      <h2>{{ data.title ? 'Edit note' : 'New note' }}</h2>
-    </div>
-    <md-icon-button aria-label="Close editor" (click)="close()"><md-icon>close</md-icon></md-icon-button>
+<div class="editor-heading">
+  <h2 mat-dialog-title>{{ data.title ? 'Edit note' : 'New note' }}</h2>
+  <button mat-icon-button mat-dialog-close aria-label="Close editor">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+
+<mat-dialog-content class="editor-content" (keydown.control.enter)="save(); $event.preventDefault()" (keydown.meta.enter)="save(); $event.preventDefault()">
+  <div class="editor-type-switch" role="group" aria-label="Note type">
+    <button mat-button type="button" [class.type-active]="type === 'text'" (click)="type = 'text'">
+      <mat-icon>notes</mat-icon> Text
+    </button>
+    <button mat-button type="button" [class.type-active]="type === 'checklist'" (click)="type = 'checklist'">
+      <mat-icon>checklist</mat-icon> Checklist
+    </button>
   </div>
 
-  <div slot="content" class="editor-content" (keydown.control.enter)="save(); $event.preventDefault()" (keydown.meta.enter)="save(); $event.preventDefault()">
-    <div class="editor-type-switch" role="group" aria-label="Note type">
-      <md-filled-tonal-button type="button" [class.type-active]="type === 'text'" (click)="type = 'text'"><md-icon slot="icon">notes</md-icon>Text</md-filled-tonal-button>
-      <md-filled-tonal-button type="button" [class.type-active]="type === 'checklist'" (click)="type = 'checklist'"><md-icon slot="icon">checklist</md-icon>Checklist</md-filled-tonal-button>
+  <input matInput class="editor-title" [(ngModel)]="title" name="title" maxlength="120" placeholder="Title" aria-label="Note title">
+
+  <textarea *ngIf="type === 'text'" matInput class="editor-body" [(ngModel)]="content" name="content" rows="10" placeholder="Take a note..." aria-label="Note content"></textarea>
+
+  <div class="editor-checklist" *ngIf="type === 'checklist'">
+    <div class="editor-checklist-row" *ngFor="let item of checklistItems; let i = index">
+      <mat-checkbox [(ngModel)]="item.checked" [name]="'item-check-' + i" color="primary" aria-label="Mark checklist item complete"></mat-checkbox>
+      <input matInput [(ngModel)]="item.text" [name]="'item-text-' + i" [class.item-checked]="item.checked" placeholder="List item">
+      <button mat-icon-button type="button" (click)="removeChecklistItem(item.id)" matTooltip="Remove item" aria-label="Remove checklist item">
+        <mat-icon>close</mat-icon>
+      </button>
     </div>
-
-    <md-outlined-text-field class="editor-title-field" label="Title" placeholder="Untitled note" maxlength="120" [value]="title" (input)="title = $any($event.target).value"></md-outlined-text-field>
-
-    @if (type === 'text') {
-      <md-outlined-text-field class="editor-body-field" type="textarea" rows="10" label="Note" placeholder="Take a note…" [value]="content" (input)="content = $any($event.target).value"></md-outlined-text-field>
-    } @else {
-      <div class="editor-checklist">
-        @for (item of checklistItems; track item.id; let i = $index) {
-          <div class="editor-checklist-row">
-            <md-checkbox [checked]="item.checked" (change)="item.checked = $any($event.target).checked" [attr.aria-label]="'Mark item ' + (i + 1) + ' complete'"></md-checkbox>
-            <md-outlined-text-field class="checklist-item-field" [value]="item.text" (input)="item.text = $any($event.target).value" [class.item-checked]="item.checked" [label]="'Item ' + (i + 1)" placeholder="List item"></md-outlined-text-field>
-            <md-icon-button aria-label="Remove item" (click)="removeChecklistItem(item.id)"><md-icon>close</md-icon></md-icon-button>
-          </div>
-        }
-        @if (hasCompletedChecklistItems()) {
-          <div class="checklist-tools">
-            <md-text-button type="button" (click)="moveCompletedToBottom()">Move completed to bottom</md-text-button>
-            <md-text-button type="button" (click)="clearCompletedChecklistItems()">Clear completed</md-text-button>
-          </div>
-        }
-        <md-outlined-button type="button" class="add-checklist-item" (click)="addChecklistItem()"><md-icon slot="icon">add</md-icon>Add item</md-outlined-button>
-      </div>
-    }
-
-    <div class="editor-section">
-      <div class="section-label">REMINDER</div>
-      <md-outlined-text-field class="reminder-field" label="Reminder date" type="date" [value]="reminderDate" (input)="reminderDate = $any($event.target).value">
-        <md-icon slot="leading-icon">calendar_month</md-icon>
-        <md-icon-button slot="trailing-icon" *ngIf="reminderDate" aria-label="Clear reminder date" (click)="reminderDate = ''"><md-icon>close</md-icon></md-icon-button>
-      </md-outlined-text-field>
-      <p class="field-hint">Reminder dates appear in your Reminders list. Desktop notifications are an optional separate setting.</p>
-      <div class="reminder-presets">
-        <span>Quick set</span>
-        <md-text-button type="button" (click)="setReminderPreset(0)">Today</md-text-button>
-        <md-text-button type="button" (click)="setReminderPreset(1)">Tomorrow</md-text-button>
-        <md-text-button type="button" (click)="setReminderPreset(7)">Next week</md-text-button>
-        <md-text-button type="button" *ngIf="reminderDate" (click)="reminderDate = ''">Clear</md-text-button>
-      </div>
+    <div class="checklist-tools" *ngIf="hasCompletedChecklistItems()">
+      <button mat-button type="button" (click)="moveCompletedToBottom()">Move completed to bottom</button>
+      <button mat-button type="button" (click)="clearCompletedChecklistItems()">Clear completed</button>
     </div>
+    <button mat-button type="button" class="add-checklist-item" (click)="addChecklistItem()">
+      <mat-icon>add</mat-icon> Add item
+    </button>
+  </div>
 
-    <div class="editor-section">
-      <div class="section-label">LABELS</div>
-      <md-outlined-text-field class="tags-field" label="Labels" placeholder="Work, Ideas, Personal" [value]="tagsText" (input)="tagsText = $any($event.target).value">
-        <md-icon slot="leading-icon">label</md-icon>
-      </md-outlined-text-field>
-      <p class="field-hint">Separate labels with commas.</p>
-    </div>
+  <mat-form-field appearance="outline" class="reminder-field">
+    <mat-label>Reminder date</mat-label>
+    <input matInput type="date" [(ngModel)]="reminderDate" name="reminderDate" aria-label="Reminder date">
+    <mat-hint>Shows in your Reminders list. It does not send a device notification.</mat-hint>
+    <button *ngIf="reminderDate" mat-icon-button matSuffix type="button" aria-label="Clear reminder date" matTooltip="Clear reminder" (click)="reminderDate = ''">
+      <mat-icon>close</mat-icon>
+    </button>
+  </mat-form-field>
 
-    <div class="editor-section">
-      <div class="section-label">NOTE COLOR</div>
-      <div class="color-options">
-        @for (option of colorOptions; track option.value) {
-          <button type="button" class="color-option" [class.color-selected]="color === option.value" [style.background-color]="option.value" [attr.aria-label]="option.label + ' note color'" [attr.aria-pressed]="color === option.value" (click)="color = option.value">
-            <md-icon *ngIf="color === option.value">check</md-icon>
-          </button>
-        }
-      </div>
-    </div>
+  <div class="reminder-presets" aria-label="Quick reminder dates">
+    <span>Quick set:</span>
+    <button mat-button type="button" (click)="setReminderPreset(0)">Today</button>
+    <button mat-button type="button" (click)="setReminderPreset(1)">Tomorrow</button>
+    <button mat-button type="button" (click)="setReminderPreset(7)">Next week</button>
+    <button mat-button type="button" *ngIf="reminderDate" (click)="reminderDate = ''">Clear</button>
+  </div>
 
-    <div class="editor-options">
-      <label class="editor-option"><md-checkbox [checked]="pinned" (change)="pinned = $any($event.target).checked"></md-checkbox><span>Pin note</span></label>
-      <label class="editor-option"><md-checkbox [checked]="favorite" (change)="favorite = $any($event.target).checked"></md-checkbox><span>Add to favorites</span></label>
-    </div>
+  <mat-form-field appearance="outline" class="tags-field">
+    <mat-label>Labels</mat-label>
+    <input matInput [(ngModel)]="tagsText" name="tags" placeholder="Work, Ideas, Personal">
+    <mat-hint>Separate labels with commas.</mat-hint>
+  </mat-form-field>
 
-    <div class="editor-count" aria-live="polite">
-      <span>{{ wordCount }} {{ wordCount === 1 ? 'word' : 'words' }}</span>
-      <span>{{ characterCount }} {{ characterCount === 1 ? 'character' : 'characters' }}</span>
-      <span class="editor-count-shortcut">Ctrl/⌘ + Enter to save</span>
+  <div class="color-section">
+    <span class="color-label">Note color</span>
+    <div class="color-options">
+      <button
+        *ngFor="let option of colorOptions"
+        mat-icon-button
+        class="color-option"
+        [class.color-selected]="color === option.value"
+        [style.background-color]="option.value"
+        [attr.aria-label]="option.label + ' note color'"
+        [matTooltip]="option.label"
+        (click)="color = option.value">
+        <mat-icon *ngIf="color === option.value">check</mat-icon>
+      </button>
     </div>
   </div>
 
-  <div slot="actions" class="dialog-actions">
-    <md-text-button (click)="close()">Cancel</md-text-button>
-    <md-filled-button (click)="save()" [disabled]="!title.trim() && !content.trim() && !hasChecklistText()">Save note</md-filled-button>
+  <div class="editor-options">
+    <mat-checkbox [(ngModel)]="pinned" name="pinned" color="primary">Pin note</mat-checkbox>
+    <mat-checkbox [(ngModel)]="favorite" name="favorite" color="primary">Add to favorites</mat-checkbox>
   </div>
-</md-dialog>
+
+  <div class="editor-count" aria-live="polite">
+    <span>{{ wordCount }} {{ wordCount === 1 ? 'word' : 'words' }}</span>
+    <span>{{ characterCount }} {{ characterCount === 1 ? 'character' : 'characters' }}</span>
+    <span class="editor-count-shortcut">Ctrl/⌘ + Enter to save</span>
+  </div>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button mat-dialog-close>Cancel</button>
+  <button mat-flat-button color="primary" (click)="save()" [disabled]="!title.trim() && !content.trim() && !hasChecklistText()">Save</button>
+</mat-dialog-actions>

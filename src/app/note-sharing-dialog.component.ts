@@ -1,6 +1,12 @@
 import { CommonModule } from '@angular/common';
-import { CUSTOM_ELEMENTS_SCHEMA, Component, ElementRef, ViewChild, inject, signal } from '@angular/core';
-import { DialogRef, DIALOG_DATA } from '@angular/cdk/dialog';
+import { Component, inject, signal } from '@angular/core';
+import { FormsModule } from '@angular/forms';
+import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
+import { MatButtonModule } from '@angular/material/button';
+import { MatFormFieldModule } from '@angular/material/form-field';
+import { MatIconModule } from '@angular/material/icon';
+import { MatInputModule } from '@angular/material/input';
+import { MatSelectModule } from '@angular/material/select';
 import { Note } from './note-editor-dialog.component';
 import { NoteShareRecord, SupabaseService } from './supabase.service';
 
@@ -13,16 +19,14 @@ interface NoteSharingDialogData {
 @Component({
   selector: 'app-note-sharing-dialog',
   standalone: true,
-  imports: [CommonModule],
-  schemas: [CUSTOM_ELEMENTS_SCHEMA],
+  imports: [CommonModule, FormsModule, MatButtonModule, MatDialogModule, MatFormFieldModule, MatIconModule, MatInputModule, MatSelectModule],
   templateUrl: './note-sharing-dialog.component.html',
   styleUrl: './note-sharing-dialog.component.css'
 })
 export class NoteSharingDialogComponent {
-  readonly data = inject<NoteSharingDialogData>(DIALOG_DATA);
-  private readonly dialogRef = inject<DialogRef<boolean, NoteSharingDialogComponent>>(DialogRef);
+  readonly data = inject<NoteSharingDialogData>(MAT_DIALOG_DATA);
+  private readonly dialogRef = inject<MatDialogRef<NoteSharingDialogComponent, boolean>>(MatDialogRef);
   private readonly supabase = inject(SupabaseService);
-  @ViewChild('materialDialog', { static: true }) private materialDialog!: ElementRef<HTMLElement & { close: () => void }>;
 
   readonly shares = signal<NoteShareRecord[]>([]);
   readonly email = signal('');
@@ -117,10 +121,6 @@ export class NoteSharingDialogComponent {
   }
 
   close(): void {
-    this.materialDialog.nativeElement.close();
-  }
-
-  onClosed(): void {
     this.dialogRef.close(this.changed);
   }
 }
