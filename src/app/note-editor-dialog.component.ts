@@ -1,13 +1,6 @@
 import { CommonModule } from '@angular/common';
-import { Component, inject } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { CUSTOM_ELEMENTS_SCHEMA, Component, ElementRef, ViewChild, inject } from '@angular/core';
+import { DialogRef, DIALOG_DATA } from '@angular/cdk/dialog';
 
 export interface Note {
   id: string;
@@ -33,14 +26,17 @@ export type NoteDraft = Pick<Note, 'title' | 'content' | 'tags' | 'color' | 'typ
 @Component({
   selector: 'app-note-editor-dialog',
   standalone: true,
-  imports: [CommonModule, FormsModule, MatButtonModule, MatCheckboxModule, MatDialogModule, MatFormFieldModule, MatIconModule, MatInputModule, MatTooltipModule],
+  imports: [CommonModule],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './note-editor-dialog.component.html',
   styleUrl: './note-editor-dialog.component.css'
 })
 export class NoteEditorDialogComponent {
-  readonly data = inject<Note>(MAT_DIALOG_DATA);
-  private readonly dialogRef = inject<MatDialogRef<NoteEditorDialogComponent, NoteDraft>>(MatDialogRef);
+  readonly data = inject<Note>(DIALOG_DATA);
+  private readonly dialogRef = inject<DialogRef<NoteDraft, NoteEditorDialogComponent>>(DialogRef);
+  @ViewChild('materialDialog', { static: true }) private materialDialog!: ElementRef<HTMLElement & { close: () => void }>;
 
+  private pendingDraft?: NoteDraft;
   readonly colorOptions = [
     { label: 'Default', value: '#ffffff' },
     { label: 'Red', value: '#fce8e6' },
@@ -65,9 +61,7 @@ export class NoteEditorDialogComponent {
   reminderDate = this.data.reminderDate || '';
 
   get wordCount(): number {
-    const text = this.type === 'checklist'
-      ? this.checklistItems.map((item) => item.text).join(' ')
-      : this.content;
+    const text = this.type === 'checklist' ? this.checklistItems.map((item) => item.text).join(' ') : this.content;
     const trimmed = text.trim();
     return trimmed ? trimmed.split(/\s+/).length : 0;
   }
@@ -123,7 +117,7 @@ export class NoteEditorDialogComponent {
 
   save(): void {
     const tags = [...new Set(this.tagsText.split(',').map((tag) => tag.trim()).filter(Boolean))];
-    this.dialogRef.close({
+    this.pendingDraft = {
       title: this.title,
       content: this.content,
       tags,
@@ -133,6 +127,15 @@ export class NoteEditorDialogComponent {
       pinned: this.pinned,
       favorite: this.favorite,
       reminderDate: this.reminderDate || undefined
-    });
+    };
+    this.close();
+  }
+
+  close(): void {
+    this.materialDialog.nativeElement.close();
+  }
+
+  onClosed(): void {
+    this.dialogRef.close(this.pendingDraft);
   }
 }

@@ -1,28 +1,13 @@
 import { CommonModule, DatePipe } from '@angular/common';
 import type { User } from '@supabase/supabase-js';
 import { CdkDragDrop, DragDropModule, moveItemInArray } from '@angular/cdk/drag-drop';
-import { Component, HostListener, computed, effect, inject, signal } from '@angular/core';
-import { FormsModule } from '@angular/forms';
-import { MatButtonModule } from '@angular/material/button';
-import { MatCardModule } from '@angular/material/card';
-import { MatCheckboxModule } from '@angular/material/checkbox';
-import { MatChipsModule } from '@angular/material/chips';
-import { MatDialog, MatDialogModule } from '@angular/material/dialog';
-import { MatDividerModule } from '@angular/material/divider';
-import { MatFormFieldModule } from '@angular/material/form-field';
-import { MatIconModule } from '@angular/material/icon';
-import { MatInputModule } from '@angular/material/input';
-import { MatListModule } from '@angular/material/list';
-import { MatMenuModule } from '@angular/material/menu';
-import { MatSelectModule } from '@angular/material/select';
-import { MatSidenavModule } from '@angular/material/sidenav';
-import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
-import { MatToolbarModule } from '@angular/material/toolbar';
-import { MatTooltipModule } from '@angular/material/tooltip';
+import { CUSTOM_ELEMENTS_SCHEMA, Component, HostListener, computed, effect, inject, signal } from '@angular/core';
+import { Dialog, DialogModule } from '@angular/cdk/dialog';
 import { Note, NoteDraft, NoteEditorDialogComponent } from './note-editor-dialog.component';
 import { SupabaseService } from './supabase.service';
 import { NoteSharingDialogComponent } from './note-sharing-dialog.component';
 import { NoteViewerDialogComponent } from './note-viewer-dialog.component';
+import { ToastService } from './toast.service';
 
 export type NoteView = 'all' | 'recent' | 'favorites' | 'pinned' | 'reminders' | 'today' | 'upcoming' | 'calendar' | 'archive' | 'trash' | 'shared';
 export type SortMode = 'updated' | 'updated-asc' | 'created' | 'created-asc' | 'title' | 'title-desc' | 'reminder' | 'manual';
@@ -116,17 +101,16 @@ function readStoredNotes(): Note[] {
   selector: 'app-root',
   standalone: true,
   imports: [
-    CommonModule, DatePipe, DragDropModule, FormsModule, MatButtonModule, MatCardModule, MatCheckboxModule, MatChipsModule,
-    MatDialogModule, MatDividerModule, MatFormFieldModule, MatIconModule, MatInputModule,
-    MatListModule, MatMenuModule, MatSelectModule, MatSidenavModule, MatSnackBarModule,
-    MatToolbarModule, MatTooltipModule
+    CommonModule, DatePipe, DragDropModule, DialogModule
   ],
+  schemas: [CUSTOM_ELEMENTS_SCHEMA],
   templateUrl: './app.component.html',
   styleUrl: './app.component.css'
 })
 export class AppComponent {
-  private readonly dialog = inject(MatDialog);
-  private readonly snackBar = inject(MatSnackBar);
+  private readonly dialog = inject(Dialog);
+  private readonly snackBar = inject(ToastService);
+  readonly toast = this.snackBar;
   private readonly supabase = inject(SupabaseService);
 
   readonly activeView = signal<NoteView>('all');
@@ -1001,11 +985,13 @@ export class AppComponent {
     if (!this.canEditNote(note)) {
       this.dialog.open(NoteViewerDialogComponent, {
         data: note,
-        width: '620px',
+        width: 'auto',
         maxWidth: 'calc(100vw - 28px)',
         autoFocus: false,
         restoreFocus: true,
-        panelClass: 'angularnotes-viewer-panel'
+        hasBackdrop: false,
+        disableClose: true,
+        panelClass: 'material-web-dialog-host'
       });
       return;
     }
@@ -1018,14 +1004,14 @@ export class AppComponent {
 
   private openEditor(note: Note): void {
     this.clearSelectionMode();
-    const ref = this.dialog.open<NoteEditorDialogComponent, Note, NoteDraft>(
+    const ref = this.dialog.open<NoteDraft, Note, NoteEditorDialogComponent>(
       NoteEditorDialogComponent,
       {
-        data: note, width: '560px', maxWidth: 'calc(100vw - 28px)',
-        autoFocus: 'first-tabbable', restoreFocus: true, panelClass: 'angularnotes-editor-panel'
+        data: note, width: 'auto', maxWidth: 'calc(100vw - 28px)',
+        autoFocus: false, restoreFocus: true, hasBackdrop: false, disableClose: true, panelClass: 'material-web-dialog-host'
       }
     );
-    ref.afterClosed().subscribe((draft) => {
+    ref.closed.subscribe((draft) => {
       if (!draft || (!draft.title.trim() && !draft.content.trim() && !draft.checklistItems.some((item) => item.text.trim()))) return;
       const saved: Note = {
         ...note, ...draft, title: draft.title.trim() || 'Untitled note',
@@ -1268,11 +1254,13 @@ export class AppComponent {
 
     const ref = this.dialog.open(NoteSharingDialogComponent, {
       data: { note, ownerId: user.id, currentEmail: user.email || '' },
-      width: '520px',
+      width: 'auto',
       maxWidth: 'calc(100vw - 28px)',
-      autoFocus: 'first-tabbable',
+      autoFocus: false,
       restoreFocus: true,
-      panelClass: 'angularnotes-sharing-panel'
+      hasBackdrop: false,
+      disableClose: true,
+      panelClass: 'material-web-dialog-host'
     });
     ref.afterClosed().subscribe(async (changed) => {
       if (!changed || !this.currentUser()) return;
