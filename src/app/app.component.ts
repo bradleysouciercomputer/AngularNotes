@@ -801,26 +801,52 @@ export class AppComponent {
     }
   }
 
-  duplicateSelectedNotes(): void {
+  async duplicateSelectedNotes(): Promise<void> {
     const selected = this.selectedNotes();
     if (!selected.length) return;
+    const user = this.currentUser();
     const now = Date.now();
-    const copies = selected.map((note) => {
-      const { ownerId: _ownerId, shareRole: _shareRole, ...copySource } = note;
-      return {
-      ...copySource,
-      id: newId,
-      attachments: copiedAttachments,
-      title: note.title.trim() ? note.title.trim() + ' (copy)' : 'Untitled note (copy)',
-      checklistItems: (note.checklistItems || []).map((item) => ({ ...item, id: this.makeId('item') })),
-      pinned: false,
-      favorite: false,
-      archived: false,
-      trashed: false,
-      createdAt: now,
-      updatedAt: now
-      };
-    });
+    const copies: Note[] = [];
+    const copiedPaths: string[] = [];
+
+    try {
+      for (const note of selected) {
+        const newId = this.makeId();
+        const copiedAttachments: NoteAttachment[] = [];
+        if ((note.attachments ?? []).length && !user) {
+          throw new Error('Sign in before copying notes with attachments.');
+        }
+        if (user) {
+          for (const attachment of (note.attachments ?? [])) {
+            const copied = await this.supabase.copyNoteAttachment(attachment, user.id, newId);
+            copiedAttachments.push(copied);
+            copiedPaths.push(copied.path);
+          }
+        }
+
+        const { ownerId: _ownerId, shareRole: _shareRole, ...copySource } = note;
+        copies.push({
+          ...copySource,
+          id: newId,
+          attachments: copiedAttachments,
+          title: note.title.trim() ? note.title.trim() + ' (copy)' : 'Untitled note (copy)',
+          checklistItems: (note.checklistItems || []).map((item) => ({ ...item, id: this.makeId('item') })),
+          pinned: false,
+          favorite: false,
+          archived: false,
+          trashed: false,
+          createdAt: now,
+          updatedAt: now
+        });
+      }
+    } catch (error) {
+      if (copiedPaths.length) {
+        try { await this.supabase.removeNoteAttachments(copiedPaths); } catch { /* Best-effort cleanup for partial copies. */ }
+      }
+      this.snackBar.open(error instanceof Error ? error.message : 'Could not duplicate the selected notes and their attachments.', 'Dismiss', { duration: 4500 });
+      return;
+    }
+
     this.notes.update((current) => [...copies, ...current]);
     this.activeView.set('all');
     this.activeTag.set(null);
@@ -829,7 +855,6 @@ export class AppComponent {
     this.clearSelectionMode();
     this.snackBar.open('Duplicated ' + copies.length + ' notes', 'Dismiss', { duration: 2200 });
   }
-
   exportSelectedMarkdown(): void {
     const notes = this.selectedNotes();
     if (!notes.length) return;
