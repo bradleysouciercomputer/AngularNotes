@@ -14,18 +14,70 @@ html {
 }
 
 :root {
-  --page-bg: #fff;
-  --sidebar-bg: #fff;
-  --surface: #fff;
+  /* Semantic surface and text tokens shared by every component. */
+  --page-bg: #ffffff;
+  --sidebar-bg: #ffffff;
+  --surface: #ffffff;
+  --surface-raised: #ffffff;
   --surface-muted: #f8fafd;
-  --ink: #202124;
-  --muted: #5f6368;
-  --outline: #dadce0;
-  --outline-soft: #e8eaed;
-  --google-blue: #1a73e8;
-  --google-blue-soft: #e8f0fe;
-  --google-yellow-soft: #feefc3;
-  --note-default: #fff;
+  --surface-subtle: #f1f3f4;
+  --surface-hover: #f1f3f4;
+  --surface-dialog: #ffffff;
+  --surface-overlay: #ffffff;
+  --surface-calendar-day: #f8f9fa;
+  --surface-calendar-outside: #ffffff;
+  --surface-calendar-selected: #f1f6fe;
+
+  --text-primary: #202124;
+  --text-secondary: #5f6368;
+  --text-tertiary: #80868b;
+  --text-disabled: #9aa0a6;
+  --text-inverse: #ffffff;
+
+  --border-color: #dadce0;
+  --border-soft: #e8eaed;
+  --border-hover: #bdc1c6;
+
+  --accent: #1a73e8;
+  --accent-text: #174ea6;
+  --accent-container: #e8f0fe;
+  --accent-container-soft: #f1f6fe;
+  --accent-surface: #f8fbff;
+  --accent-border: #d2e3fc;
+  --on-accent: #ffffff;
+
+  --selected-surface: #feefc3;
+  --selected-text: #202124;
+  --selected-icon: #202124;
+
+  --brand-accent: #f9ab00;
+  --brand-accent-soft: #fff7df;
+  --success: #188038;
+  --success-text: #137333;
+  --success-container: #e6f4ea;
+  --success-container-text: #137333;
+  --danger: #b3261e;
+  --danger-container: #fce8e6;
+  --danger-container-text: #b3261e;
+
+  --bulk-surface: #f8fbff;
+  --bulk-border: #d2e3fc;
+  --bulk-text: #3c4043;
+  --bulk-meta: #5f6368;
+  --bulk-danger: #b3261e;
+  --progress-track: rgba(60, 64, 67, .13);
+  --focus-ring: rgba(26, 115, 232, .55);
+
+  /* Backwards-compatible aliases used by the existing layout rules. */
+  --ink: var(--text-primary);
+  --muted: var(--text-secondary);
+  --outline: var(--border-color);
+  --outline-soft: var(--border-soft);
+  --google-blue: var(--accent);
+  --google-blue-soft: var(--accent-container);
+  --google-yellow-soft: var(--selected-surface);
+  --note-default: var(--surface);
+
   font-family: Roboto, Arial, sans-serif;
   font-synthesis: none;
 }
@@ -34,7 +86,7 @@ html {
 html, body { min-width: 320px; min-height: 100%; margin: 0; }
 body {
   background: var(--page-bg);
-  color: var(--ink);
+  color: var(--text-primary);
   font-family: Roboto, Arial, sans-serif;
 }
 button, input, textarea { font: inherit; }
@@ -64,10 +116,20 @@ button, input, textarea { font: inherit; }
   font-weight: 500;
 }
 :focus-visible {
-  outline: 2px solid rgba(26, 115, 232, .55);
+  outline: 2px solid var(--focus-ring);
   outline-offset: 2px;
 }
 
+/* The auth theme control is positioned consistently in both appearances. */
+.auth-theme-toggle {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 10;
+  color: var(--text-secondary);
+  background: var(--surface-raised);
+}
+.auth-theme-toggle:hover { background: var(--surface-hover); }
 
 /* AngularNotes cloud account screens */
 .auth-page {
@@ -75,7 +137,7 @@ button, input, textarea { font: inherit; }
   display: grid;
   place-items: center;
   padding: 28px 18px;
-  background: #f8fafd;
+  background: var(--surface-muted);
 }
 .auth-loading {
   min-height: 100vh;
@@ -83,8 +145,8 @@ button, input, textarea { font: inherit; }
   place-content: center;
   justify-items: center;
   gap: 14px;
-  color: #5f6368;
-  background: #f8fafd;
+  color: var(--text-secondary);
+  background: var(--surface-muted);
   font-size: 14px;
 }
 .auth-loading-mark,
@@ -95,8 +157,8 @@ button, input, textarea { font: inherit; }
   height: 52px;
   margin: 0 auto 14px;
   border-radius: 16px;
-  color: #f9ab00;
-  background: #fff7df;
+  color: var(--brand-accent);
+  background: var(--brand-accent-soft);
 }
 .auth-loading-mark mat-icon,
 .auth-brand-mark mat-icon {
@@ -106,14 +168,15 @@ button, input, textarea { font: inherit; }
 }
 .auth-card {
   width: min(100%, 440px);
+  background: var(--surface);
   padding: 34px 34px 26px;
-  border: 1px solid #e8eaed;
+  border: 1px solid var(--border-soft);
   border-radius: 24px;
   box-shadow: 0 8px 28px rgba(60, 64, 67, .08);
 }
 .auth-card h1 {
   margin: 0;
-  color: #202124;
+  color: var(--text-primary);
   font-size: 25px;
   font-weight: 500;
   letter-spacing: -.5px;
@@ -121,7 +184,7 @@ button, input, textarea { font: inherit; }
 }
 .auth-description {
   margin: 10px 0 24px;
-  color: #5f6368;
+  color: var(--text-secondary);
   font-size: 14px;
   line-height: 1.55;
   text-align: center;
@@ -129,7 +192,7 @@ button, input, textarea { font: inherit; }
 .auth-form { display: flex; flex-direction: column; gap: 8px; }
 .auth-form mat-form-field { width: 100%; }
 .auth-form > button { width: 100%; min-height: 46px; margin-top: 4px; }
-.auth-field-hint { margin: -6px 0 8px; color: #6b7280; font-size: 12px; }
+.auth-field-hint { margin: -6px 0 8px; color: var(--text-secondary); font-size: 12px; }
 .auth-alert {
   margin: 0 0 16px;
   padding: 11px 13px;
@@ -137,8 +200,8 @@ button, input, textarea { font: inherit; }
   font-size: 13px;
   line-height: 1.45;
 }
-.auth-alert-error { color: #b3261e; background: #fce8e6; }
-.auth-alert-message { color: #137333; background: #e6f4ea; }
+.auth-alert-error { color: var(--danger); background: var(--danger-container); }
+.auth-alert-message { color: var(--success-text); background: var(--success-container); }
 .auth-secondary-actions {
   display: flex;
   align-items: center;
@@ -146,7 +209,7 @@ button, input, textarea { font: inherit; }
   flex-wrap: wrap;
   gap: 2px 6px;
   margin-top: 15px;
-  color: #5f6368;
+  color: var(--text-secondary);
   font-size: 13px;
 }
 .auth-secondary-actions span { padding-left: 6px; }
@@ -157,15 +220,15 @@ button, input, textarea { font: inherit; }
   gap: 7px;
   margin-top: 22px;
   padding-top: 17px;
-  border-top: 1px solid #f1f3f4;
-  color: #6b7280;
+  border-top: 1px solid var(--border-soft);
+  color: var(--text-secondary);
   font-size: 12px;
 }
-.auth-privacy mat-icon { width: 18px; height: 18px; font-size: 18px; color: #188038; }
+.auth-privacy mat-icon { width: 18px; height: 18px; font-size: 18px; color: var(--success); }
 .account-button {
   max-width: 220px;
   min-width: 0;
-  color: #5f6368;
+  color: var(--text-secondary);
   text-transform: none;
 }
 .account-button mat-icon { flex: 0 0 auto; margin-right: 6px; }
@@ -180,9 +243,9 @@ button, input, textarea { font: inherit; }
 .reminder-calendar {
   margin: -2px 0 22px;
   padding: 18px;
-  border: 1px solid #dadce0;
+  border: 1px solid var(--border-color);
   border-radius: 12px;
-  background: #fff;
+  background: var(--surface);
 }
 .calendar-header {
   display: flex;
@@ -199,19 +262,19 @@ button, input, textarea { font: inherit; }
 }
 .calendar-heading h2 {
   margin: 0;
-  color: #202124;
+  color: var(--text-primary);
   font-size: 18px;
   font-weight: 500;
 }
 .calendar-heading span {
-  color: #80868b;
+  color: var(--text-tertiary);
   font-size: 12px;
 }
 .calendar-month-controls {
   display: flex;
   align-items: center;
   gap: 4px;
-  color: #5f6368;
+  color: var(--text-secondary);
 }
 .calendar-month-controls button {
   border-radius: 20px;
@@ -227,7 +290,7 @@ button, input, textarea { font: inherit; }
 }
 .calendar-weekday {
   padding: 8px 4px;
-  color: #80868b;
+  color: var(--text-tertiary);
   font-size: 11px;
   font-weight: 500;
   text-align: center;
@@ -242,15 +305,15 @@ button, input, textarea { font: inherit; }
   padding: 8px;
   border: 1px solid transparent;
   border-radius: 9px;
-  background: #f8f9fa;
-  color: #202124;
+  background: var(--surface-calendar-day);
+  color: var(--text-primary);
   text-align: left;
   cursor: pointer;
   transition: background .12s ease, border-color .12s ease;
 }
 .calendar-day:hover {
-  border-color: #dadce0;
-  background: #f1f3f4;
+  border-color: var(--border-color);
+  background: var(--surface-hover);
 }
 .calendar-day-number {
   display: inline-flex;
@@ -264,34 +327,34 @@ button, input, textarea { font: inherit; }
   font-variant-numeric: tabular-nums;
 }
 .calendar-day-outside {
-  background: #fff;
-  color: #bdc1c6;
+  background: var(--surface-calendar-outside);
+  color: var(--text-disabled);
 }
-.calendar-day-outside:hover { background: #f8f9fa; }
+.calendar-day-outside:hover { background: var(--surface-hover); }
 .calendar-day-today .calendar-day-number {
-  background: #e8f0fe;
-  color: #174ea6;
+  background: var(--accent-container);
+  color: var(--accent-text);
 }
 .calendar-day-selected {
-  border-color: #1a73e8;
-  background: #f1f6fe;
+  border-color: var(--accent);
+  background: var(--surface-calendar-selected);
 }
 .calendar-day-selected .calendar-day-number {
-  background: #1a73e8;
-  color: #fff;
+  background: var(--accent);
+  color: var(--on-accent);
 }
 .calendar-day-count {
   max-width: 100%;
   margin: 4px 0 0 2px;
   overflow: hidden;
-  color: #5f6368;
+  color: var(--text-secondary);
   font-size: 10px;
   line-height: 1.2;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 .calendar-day-has-reminders:not(.calendar-day-selected) .calendar-day-count {
-  color: #174ea6;
+  color: var(--accent-text);
   font-weight: 500;
 }
 .calendar-footer {
@@ -302,10 +365,10 @@ button, input, textarea { font: inherit; }
   gap: 10px;
   margin-top: 14px;
   padding-top: 12px;
-  border-top: 1px solid #f1f3f4;
+  border-top: 1px solid var(--surface-subtle);
 }
 .calendar-footer > span {
-  color: #80868b;
+  color: var(--text-tertiary);
   font-size: 11px;
 }
 .calendar-footer button {
@@ -333,7 +396,8 @@ button, input, textarea { font: inherit; }
 }
 
 
-/* AngularNotes dark appearance */
+
+/* Dark mode changes tokens only; component rules remain shared. */
 html.dark-theme {
   color-scheme: dark;
   @include mat.theme((
@@ -345,319 +409,214 @@ html.dark-theme {
     typography: Roboto,
     density: 0,
   ));
+
   --page-bg: #121417;
   --sidebar-bg: #171a1e;
   --surface: #1d2126;
+  --surface-raised: #20252b;
   --surface-muted: #252a30;
-  --ink: #e7eaf0;
-  --muted: #a9b0ba;
-  --outline: #3a414b;
-  --outline-soft: #2e343d;
-  --google-blue: #8ab4f8;
-  --google-blue-soft: #263b59;
-  --google-yellow-soft: #4c411f;
-  --note-default: #25292f;
+  --surface-subtle: #2b3139;
+  --surface-hover: #343d48;
+  --surface-dialog: #1e2329;
+  --surface-overlay: #252b32;
+  --surface-calendar-day: #252a31;
+  --surface-calendar-outside: #1b1f24;
+  --surface-calendar-selected: #25364c;
+
+  --text-primary: #edf1f6;
+  --text-secondary: #b9c3cf;
+  --text-tertiary: #a4aebb;
+  --text-disabled: #8994a2;
+  --text-inverse: #142033;
+
+  --border-color: #3a414b;
+  --border-soft: #303741;
+  --border-hover: #657182;
+
+  --accent: #8ab4f8;
+  --accent-text: #b7d2ff;
+  --accent-container: #263b59;
+  --accent-container-soft: #25364c;
+  --accent-surface: #1a2736;
+  --accent-border: #394b61;
+  --on-accent: #142033;
+
+  --selected-surface: #334150;
+  --selected-text: #f0f4fa;
+  --selected-icon: #c8dcf4;
+
+  --brand-accent: #ffca5c;
+  --brand-accent-soft: #4c411f;
+  --success: #81c995;
+  --success-text: #a8dab5;
+  --success-container: #1e3a2b;
+  --success-container-text: #a8dab5;
+  --danger: #ff8a80;
+  --danger-container: #512b2b;
+  --danger-container-text: #ffb4ab;
+
+  --bulk-surface: #1a2736;
+  --bulk-border: #394b61;
+  --bulk-text: #e0e8f2;
+  --bulk-meta: #d2deed;
+  --bulk-danger: #ffb4ab;
+  --progress-track: rgba(230, 237, 245, .18);
+  --focus-ring: #9bc2ff;
+
+  --note-card-text: #edf1f6;
+  --note-card-border: rgba(225, 232, 240, .28);
+  --note-card-footer-border: rgba(255, 255, 255, .16);
+  --note-card-chip-border: rgba(230, 237, 245, .16);
+  --note-card-chip-surface: rgba(255, 255, 255, .12);
+  --note-card-chip-text: #e4eaf2;
+  --note-card-reminder-surface: rgba(0, 0, 0, .2);
+  --note-card-reminder-text: #e3eaf3;
+  --note-card-reminder-today-surface: #263f5d;
+  --note-card-reminder-today-text: #d6e6ff;
+  --note-card-reminder-overdue-surface: #5a3033;
+  --note-card-reminder-overdue-text: #ffd6d0;
+  --note-card-progress-track: rgba(255, 255, 255, .18);
+  --note-card-progress-fill: #81c995;
+  --note-card-checkbox-text: #edf1f6;
+  --note-card-checkbox-icon: #bdc8d6;
+  --color-swatch-check-bg: rgba(24, 29, 35, .9);
+
+  --ink: var(--text-primary);
+  --muted: var(--text-secondary);
+  --outline: var(--border-color);
+  --outline-soft: var(--border-soft);
+  --google-blue: var(--accent);
+  --google-blue-soft: var(--accent-container);
+  --google-yellow-soft: var(--selected-surface);
+  --note-default: var(--surface);
 }
 
-html.dark-theme body {
-  background: #121417;
-  color: #e7eaf0;
+/* Angular Material overlays live outside component view trees. These shared
+   tokens style them consistently while still following the active theme. */
+.mat-mdc-dialog-container .mdc-dialog__surface,
+.mat-mdc-dialog-container .mat-mdc-dialog-surface {
+  border: 1px solid var(--border-color);
+  background: var(--surface-dialog) !important;
+  color: var(--text-primary);
+}
+.mat-mdc-menu-panel,
+.mat-mdc-select-panel,
+.mat-mdc-autocomplete-panel {
+  background: var(--surface-overlay);
+  color: var(--text-primary);
+}
+.mat-mdc-menu-item,
+.mat-mdc-option {
+  color: var(--text-primary);
+}
+.mat-mdc-menu-item .mat-icon,
+.mat-mdc-option .mat-pseudo-checkbox {
+  color: var(--text-secondary);
+}
+.mat-mdc-menu-item:hover,
+.mat-mdc-option:hover {
+  background: var(--surface-hover);
+}
+.mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled) {
+  background: var(--accent-container-soft);
 }
 
-html.dark-theme .auth-page,
-html.dark-theme .auth-loading {
-  background: #121417;
-  color: #dfe4eb;
+.mat-mdc-form-field {
+  --mdc-outlined-text-field-input-text-color: var(--text-primary);
+  --mdc-outlined-text-field-label-text-color: var(--text-secondary);
+  --mdc-outlined-text-field-hover-outline-color: var(--border-hover);
+  --mdc-outlined-text-field-focus-outline-color: var(--focus-ring);
+  --mdc-outlined-text-field-outline-color: var(--border-color);
+  --mdc-outlined-text-field-input-text-placeholder-color: var(--text-tertiary);
+  --mat-form-field-enabled-select-arrow-color: var(--text-secondary);
+  --mat-form-field-focus-select-arrow-color: var(--accent);
 }
-html.dark-theme .auth-card {
-  border-color: #343b45;
-  background: #1d2126;
-  box-shadow: 0 10px 32px rgba(0, 0, 0, .28);
+.mat-mdc-form-field .mdc-notched-outline__leading,
+.mat-mdc-form-field .mdc-notched-outline__notch,
+.mat-mdc-form-field .mdc-notched-outline__trailing {
+  border-color: var(--border-color);
 }
-html.dark-theme .auth-card h1 { color: #edf0f5; }
-html.dark-theme .auth-description,
-html.dark-theme .auth-secondary-actions { color: #b2bac5; }
-html.dark-theme .auth-field-hint { color: #aab3bf; }
-html.dark-theme .auth-privacy { border-color: #343b45; color: #aab3bf; }
-html.dark-theme .auth-alert-error { color: #ffb4ab; background: #512b2b; }
-html.dark-theme .auth-alert-message { color: #a8dab5; background: #1e3a2b; }
-html.dark-theme .auth-theme-toggle {
-  position: fixed;
-  top: 18px;
-  right: 18px;
-  z-index: 10;
-  color: #c4ccd6;
-  background: #242a31;
+.mat-mdc-form-field.mat-focused .mdc-notched-outline__leading,
+.mat-mdc-form-field.mat-focused .mdc-notched-outline__notch,
+.mat-mdc-form-field.mat-focused .mdc-notched-outline__trailing {
+  border-color: var(--accent);
 }
-html.dark-theme .auth-theme-toggle:hover { background: #303842; }
-
-html.dark-theme .app-shell,
-html.dark-theme .main-content { background: #121417; }
-html.dark-theme .sidebar { background: #171a1e; }
-html.dark-theme .topbar {
-  background: #171a1e;
-  border-bottom-color: #303741;
+.mat-mdc-form-field input,
+.mat-mdc-form-field textarea,
+.mat-mdc-select-value,
+.mat-mdc-form-field .mat-mdc-floating-label,
+.mat-mdc-select-arrow,
+.mat-mdc-select-placeholder,
+.mat-mdc-select-value-text {
+  color: var(--text-primary);
 }
-html.dark-theme .brand-name,
-html.dark-theme .toolbar-action,
-html.dark-theme .account-button,
-html.dark-theme .primary-navigation button,
-html.dark-theme .primary-navigation button mat-icon,
-html.dark-theme .sidebar-label,
-html.dark-theme .nav-count,
-html.dark-theme .storage-note,
-html.dark-theme .quick-note-actions,
-html.dark-theme .quick-checklist,
-html.dark-theme .quick-templates,
-html.dark-theme .layout-toggle,
-html.dark-theme .sort-field .mat-mdc-select-value,
-html.dark-theme .sort-field mat-icon,
-html.dark-theme .note-pinned,
-html.dark-theme .note-archived,
-html.dark-theme .card-action,
-html.dark-theme .checklist-progress,
-html.dark-theme .note-date,
-html.dark-theme .empty-state,
-html.dark-theme .reminder-summary-stat,
-html.dark-theme .reminder-summary-stat mat-icon {
-  color: #b4bdc8;
-}
-html.dark-theme .primary-navigation button.nav-selected,
-html.dark-theme .primary-navigation button.nav-selected mat-icon {
-  color: #ffe7aa;
-}
-html.dark-theme .primary-navigation button.nav-selected { background: #4c411f; }
-html.dark-theme .sidebar-divider { border-color: #303741; }
-html.dark-theme .sidebar-footnote { color: #8993a0; }
-html.dark-theme .storage-note mat-icon { color: #81c995; }
-html.dark-theme .search-field .mat-mdc-text-field-wrapper { background: #292f36; }
-html.dark-theme .search-field input,
-html.dark-theme .search-field input::placeholder { color: #e1e6ed; }
-html.dark-theme .search-field input::placeholder { opacity: .72; }
-html.dark-theme .notes-heading h1,
-html.dark-theme .reminder-summary-stat strong { color: #e7eaf0; }
-html.dark-theme .notes-heading span,
-html.dark-theme .empty-state p { color: #a4adb8; }
-html.dark-theme .sort-field .mat-mdc-text-field-wrapper { background: #20252b; }
-html.dark-theme .quick-note-shell {
-  border-color: #3a424c;
-  background: #20252b;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, .22), 0 1px 3px rgba(0, 0, 0, .16);
-}
-html.dark-theme .quick-note-shell:hover { box-shadow: 0 3px 8px rgba(0, 0, 0, .32); }
-html.dark-theme .quick-note { background: transparent; color: #c0c8d2; }
-html.dark-theme .quick-note:hover { background: transparent; }
-html.dark-theme .quick-checklist:hover,
-html.dark-theme .quick-templates:hover { background: #343b44; }
-html.dark-theme .note-card {
-  border-color: rgba(225, 232, 240, .25) !important;
-}
-html.dark-theme .note-card:hover {
-  border-color: rgba(225, 232, 240, .5) !important;
-  box-shadow: 0 3px 10px rgba(0, 0, 0, .24) !important;
-}
-html.dark-theme .note-card.note-card-default {
-  background: #25292f !important;
-}
-html.dark-theme .note-card.note-card-default .note-body,
-html.dark-theme .note-card.note-card-default .note-title,
-html.dark-theme .note-card.note-card-default .note-text,
-html.dark-theme .note-card.note-card-default .card-action,
-html.dark-theme .note-card.note-card-default .note-pinned,
-html.dark-theme .note-card.note-card-default .note-archived {
-  color: #e4e9f0;
-}
-html.dark-theme .note-card.note-card-default .note-date { color: #a2acb8; }
-html.dark-theme .note-card.note-card-default .note-tags mat-chip {
-  background: rgba(255, 255, 255, .11);
-  color: #d7dee7;
-}
-html.dark-theme .note-card.note-card-default .note-footer { border-top-color: rgba(255, 255, 255, .12); }
-html.dark-theme .note-card.note-card-default .checklist-progress-track { background: rgba(255, 255, 255, .18); }
-html.dark-theme .note-card.note-card-default .note-shared-role {
-  color: #d7dee7;
-  background: rgba(255, 255, 255, .13);
-}
-html.dark-theme .note-tags mat-chip {
-  background: rgba(0, 0, 0, .08);
-}
-html.dark-theme .empty-state h2 { color: #e2e7ee; }
-html.dark-theme .empty-icon { color: #424a55; }
-html.dark-theme .reminder-summary,
-html.dark-theme .reminder-calendar {
-  border-color: #343c46;
-  background: #1c2025;
-}
-html.dark-theme .reminder-summary-stat strong,
-html.dark-theme .calendar-heading h2 { color: #e5eaf1; }
-html.dark-theme .reminder-summary p,
-html.dark-theme .calendar-heading span,
-html.dark-theme .calendar-day-count,
-html.dark-theme .calendar-month-controls,
-html.dark-theme .calendar-weekday { color: #a4aebb; }
-html.dark-theme .calendar-day { background: #252a31; color: #e0e6ed; }
-html.dark-theme .calendar-day:hover { border-color: #48515d; background: #303741; }
-html.dark-theme .calendar-day-outside { background: #1b1f24; color: #68727e; }
-html.dark-theme .calendar-day-outside:hover { background: #262c33; }
-html.dark-theme .calendar-day-today .calendar-day-number {
-  background: #293e59;
-  color: #c3dcff;
-}
-html.dark-theme .calendar-day-selected {
-  border-color: #8ab4f8;
-  background: #25364c;
-}
-html.dark-theme .calendar-day-selected .calendar-day-number {
-  background: #8ab4f8;
-  color: #142033;
-}
-html.dark-theme .calendar-day-has-reminders:not(.calendar-day-selected) .calendar-day-count { color: #a8c7fa; }
-html.dark-theme .calendar-footer { border-top-color: #343c46; }
-html.dark-theme .bulk-toolbar {
-  border-color: #394b61;
-  background: #1a2736;
-  color: #e0e8f2;
-}
-html.dark-theme .bulk-selection-summary,
-html.dark-theme .bulk-selection-summary span,
-html.dark-theme .bulk-toolbar .bulk-selection-summary button { color: #d2deed; }
-html.dark-theme .note-shared-role {
-  color: #d7dee7;
-  background: rgba(0, 0, 0, .16);
-}
-html.dark-theme .note-reminder { background: rgba(0, 0, 0, .12); color: #414b58; }
-html.dark-theme .note-reminder.reminder-today { background: #2c4564; color: #d2e3fc; }
-html.dark-theme .note-reminder.reminder-overdue { background: #5a3030; color: #ffd6d0; }
-
-html.dark-theme .mat-mdc-dialog-container .mdc-dialog__surface,
-html.dark-theme .mat-mdc-dialog-container .mat-mdc-dialog-surface {
-  border-color: #39414b;
-  background: #1e2329 !important;
-  color: #e6ebf2;
-}
-html.dark-theme .editor-heading h2,
-html.dark-theme .sharing-heading h2,
-html.dark-theme .sharing-list-heading h3,
-html.dark-theme .viewer-heading h2 { color: #e8edf4; }
-html.dark-theme .editor-title,
-html.dark-theme .editor-body,
-html.dark-theme .editor-checklist-row input,
-html.dark-theme .reminder-field input[type="date"],
-html.dark-theme .viewer-note-text,
-html.dark-theme .viewer-checklist-item,
-html.dark-theme .sharing-person-email { color: #e2e8f0; }
-html.dark-theme .editor-title::placeholder,
-html.dark-theme .editor-body::placeholder { color: #929daa; }
-html.dark-theme .color-label,
-html.dark-theme .sharing-note-title,
-html.dark-theme .sharing-description,
-html.dark-theme .sharing-explainer,
-html.dark-theme .viewer-access,
-html.dark-theme .viewer-reminder,
-html.dark-theme .reminder-presets > span { color: #aeb8c5; }
-html.dark-theme .editor-type-switch { background: #2b3139; }
-html.dark-theme .editor-type-switch button { color: #b5bfcb; }
-html.dark-theme .editor-type-switch button.type-active {
-  background: #454e59;
-  color: #f1f4f8;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, .35);
-}
-html.dark-theme .editor-checklist-row { border-bottom-color: #343b45; }
-html.dark-theme .editor-checklist-row input.item-checked { color: #8b96a4; }
-html.dark-theme .color-option { border-color: rgba(230, 237, 245, .32); }
-html.dark-theme .color-selected { outline-color: #8ab4f8; }
-html.dark-theme .sharing-explainer { background: #292f37; }
-html.dark-theme .sharing-list-heading > span,
-html.dark-theme .sharing-avatar { background: #303741; color: #d1d9e3; }
-html.dark-theme .sharing-error { color: #ffb4ab; background: #512b2b; }
-html.dark-theme .sharing-message { color: #a8dab5; background: #1e3a2b; }
-html.dark-theme .viewer-updated { border-top-color: #343b45; color: #9da8b5; }
-
-html.dark-theme .mat-mdc-menu-panel,
-html.dark-theme .mat-mdc-select-panel,
-html.dark-theme .mat-mdc-autocomplete-panel {
-  background: #252b32;
-  color: #e5eaf1;
-}
-html.dark-theme .mat-mdc-menu-item,
-html.dark-theme .mat-mdc-option { color: #e5eaf1; }
-html.dark-theme .mat-mdc-menu-item .mat-icon,
-html.dark-theme .mat-mdc-option .mat-pseudo-checkbox { color: #bdc7d3; }
-html.dark-theme .mat-mdc-menu-item:hover,
-html.dark-theme .mat-mdc-option:hover { background: #343d48; }
-html.dark-theme .mat-mdc-tooltip .mdc-tooltip__surface {
-  background: #3a424d;
-  color: #f1f4f8;
-}
-html.dark-theme .mat-mdc-snack-bar-container {
-  --mdc-snackbar-container-color: #343b44;
-  --mdc-snackbar-supporting-text-color: #edf1f6;
-  --mat-snack-bar-button-color: #a8c7fa;
-}
-html.dark-theme .mat-mdc-form-field .mdc-text-field--outlined,
-html.dark-theme .mat-mdc-form-field .mdc-text-field--filled { color: #e5eaf1; }
-html.dark-theme .mat-mdc-form-field input,
-html.dark-theme .mat-mdc-form-field textarea,
-html.dark-theme .mat-mdc-select-value,
-html.dark-theme .mat-mdc-form-field .mat-mdc-floating-label { color: #e0e6ed; }
-html.dark-theme .mat-mdc-form-field input::placeholder,
-html.dark-theme .mat-mdc-form-field textarea::placeholder { color: #9ba6b4; opacity: 1; }
-html.dark-theme .mat-divider { border-top-color: #39414b; }
-html.dark-theme .mat-mdc-chip { --mdc-chip-label-text-color: #dce3ec; }
-html.dark-theme .mat-mdc-checkbox { --mdc-checkbox-unselected-icon-color: #a8b2bf; }
-html.dark-theme .mat-mdc-button:not(.mdc-button--unelevated),
-html.dark-theme .mat-mdc-icon-button { color: inherit; }
-
-@media (prefers-reduced-motion: no-preference) {
-  html.dark-theme body,
-  html.dark-theme .sidebar,
-  html.dark-theme .main-content,
-  html.dark-theme .topbar,
-  html.dark-theme .auth-card,
-  html.dark-theme .note-card,
-  html.dark-theme .reminder-calendar,
-  html.dark-theme .reminder-summary {
-    transition: background-color .18s ease, border-color .18s ease, color .18s ease;
-  }
+.mat-mdc-form-field-hint,
+.mat-mdc-form-field-subscript-wrapper {
+  color: var(--text-secondary);
 }
 
+.mat-mdc-checkbox {
+  --mdc-checkbox-label-text-color: var(--text-primary);
+  --mdc-checkbox-unselected-icon-color: var(--text-secondary);
+  --mdc-checkbox-unselected-hover-icon-color: var(--text-primary);
+  --mdc-checkbox-selected-checkmark-color: var(--text-inverse);
+}
+.mat-mdc-checkbox .mdc-label,
+.mat-mdc-radio-button .mdc-label {
+  color: var(--text-primary);
+}
+.mat-mdc-chip,
+.mat-mdc-standard-chip {
+  --mdc-chip-label-text-color: var(--text-primary);
+  --mdc-chip-with-trailing-icon-trailing-icon-color: var(--text-secondary);
+}
+.mat-mdc-chip-option,
+.mat-mdc-chip-option .mdc-evolution-chip__text-label {
+  color: var(--text-primary);
+}
+.mat-mdc-chip-option.mdc-evolution-chip--selected {
+  background: var(--accent-container);
+  --mdc-chip-label-text-color: var(--accent-text);
+}
+.mat-mdc-button-base:disabled,
+.mat-mdc-button-base[disabled] { opacity: .58; }
 
-/* Dark-mode contrast audit: application controls and secondary UI text */
-html.dark-theme .empty-trash,
-html.dark-theme .note-card .card-action .favorite-active {
-  color: #ff8a80 !important;
+.mat-mdc-snack-bar-container {
+  --mdc-snackbar-container-color: var(--surface-overlay);
+  --mdc-snackbar-supporting-text-color: var(--text-primary);
+  --mat-snack-bar-button-color: var(--accent-text);
+  --mdc-text-button-label-text-color: var(--accent-text);
+  --mat-text-button-label-text-color: var(--accent-text);
 }
-html.dark-theme .type-filter-label,
-html.dark-theme .note-drag-handle,
-html.dark-theme .note-card .checklist-progress,
-html.dark-theme .note-card .note-date,
-html.dark-theme .note-card .note-pinned,
-html.dark-theme .note-card .note-archived {
-  color: #b9c3cf;
+.mat-mdc-snack-bar-container .mat-mdc-snack-bar-action,
+.mat-mdc-snack-bar-container .mat-mdc-snack-bar-action .mdc-button__label {
+  color: var(--accent-text) !important;
+  font-weight: 600;
 }
-html.dark-theme .checklist-complete { color: #aeb8c5; }
-html.dark-theme .select-mode-toggle.select-mode-active {
-  color: #b7d2ff;
-  background: #283d58;
+.mat-mdc-tooltip {
+  --mdc-plain-tooltip-container-color: var(--surface-overlay);
+  --mdc-plain-tooltip-supporting-text-color: var(--text-primary);
+  --mat-tooltip-container-color: var(--surface-overlay);
+  --mat-tooltip-supporting-text-color: var(--text-primary);
 }
-html.dark-theme .bulk-toolbar .bulk-delete { color: #ffb4ab; }
-html.dark-theme .bulk-toolbar .bulk-delete:disabled,
-html.dark-theme .bulk-toolbar .bulk-delete[disabled],
-html.dark-theme .bulk-toolbar .bulk-delete.mat-mdc-button-disabled,
-html.dark-theme .bulk-toolbar .bulk-delete.mdc-button--disabled {
-  color: rgba(220, 228, 238, .38) !important;
-  --mdc-text-button-label-text-color: rgba(220, 228, 238, .38);
-  --mat-text-button-label-text-color: rgba(220, 228, 238, .38);
+.mat-mdc-tooltip .mdc-tooltip__surface {
+  border: 1px solid var(--border-color);
+  background: var(--surface-overlay) !important;
+  color: var(--text-primary) !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, .24);
 }
-html.dark-theme .bulk-toolbar .bulk-delete:disabled mat-icon,
-html.dark-theme .bulk-toolbar .bulk-delete[disabled] mat-icon,
-html.dark-theme .bulk-toolbar .bulk-delete.mat-mdc-button-disabled mat-icon {
-  color: inherit !important;
-}
-html.dark-theme .bulk-color-swatch { border-color: rgba(230, 237, 245, .38); }
+.mat-divider { border-top-color: var(--border-color); }
+html.dark-theme input,
+html.dark-theme textarea,
+html.dark-theme select { color-scheme: dark; }
+html.dark-theme input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(.8); }
+html.dark-theme ::selection { color: #f4f7fb; background: #365b86; }
+
+/* A note's tint is calculated from its saved color in the component. Text and
+   supporting controls use one high-contrast foreground on those dark tints. */
 html.dark-theme .note-card.note-card-dark {
-  color: #edf1f6;
-  border-color: rgba(225, 232, 240, .25) !important;
+  color: var(--note-card-text);
+  border-color: var(--note-card-border) !important;
 }
 html.dark-theme .note-card.note-card-dark .note-body,
 html.dark-theme .note-card.note-card-dark .note-title,
@@ -669,162 +628,46 @@ html.dark-theme .note-card.note-card-dark .note-shared-role,
 html.dark-theme .note-card.note-card-dark .note-footer,
 html.dark-theme .note-card.note-card-dark .checklist-preview,
 html.dark-theme .note-card.note-card-dark .checklist-preview .mdc-label {
-  color: #edf1f6 !important;
+  color: var(--note-card-text) !important;
 }
-html.dark-theme .note-card.note-card-dark .note-footer { border-top-color: rgba(255, 255, 255, .16); }
+html.dark-theme .note-card.note-card-dark .note-footer {
+  border-top-color: var(--note-card-footer-border);
+}
 html.dark-theme .note-card.note-card-dark .note-tags mat-chip {
-  border-color: rgba(230, 237, 245, .14);
-  background: rgba(255, 255, 255, .12);
-  color: #e4eaf2 !important;
+  border-color: var(--note-card-chip-border);
+  background: var(--note-card-chip-surface);
+  color: var(--note-card-chip-text) !important;
 }
 html.dark-theme .note-card.note-card-dark .note-shared-role {
-  background: rgba(255, 255, 255, .14);
+  background: var(--note-card-chip-surface);
 }
 html.dark-theme .note-card.note-card-dark .note-reminder {
-  background: rgba(0, 0, 0, .2);
-  color: #e3eaf3;
+  background: var(--note-card-reminder-surface);
+  color: var(--note-card-reminder-text);
 }
 html.dark-theme .note-card.note-card-dark .note-reminder.reminder-today {
-  background: #263f5d;
-  color: #d6e6ff;
+  background: var(--note-card-reminder-today-surface);
+  color: var(--note-card-reminder-today-text);
 }
 html.dark-theme .note-card.note-card-dark .note-reminder.reminder-overdue {
-  background: #5a3033;
-  color: #ffd6d0;
+  background: var(--note-card-reminder-overdue-surface);
+  color: var(--note-card-reminder-overdue-text);
 }
 html.dark-theme .note-card.note-card-dark .checklist-progress-track {
-  background: rgba(255, 255, 255, .18);
+  background: var(--note-card-progress-track);
 }
-html.dark-theme .note-card.note-card-dark .checklist-progress-track span { background: #81c995; }
+html.dark-theme .note-card.note-card-dark .checklist-progress-track span {
+  background: var(--note-card-progress-fill);
+}
 html.dark-theme .note-card.note-card-dark .mat-mdc-checkbox {
-  --mdc-checkbox-label-text-color: #edf1f6;
-  --mdc-checkbox-unselected-icon-color: #bdc8d6;
+  --mdc-checkbox-label-text-color: var(--note-card-checkbox-text);
+  --mdc-checkbox-unselected-icon-color: var(--note-card-checkbox-icon);
 }
-html.dark-theme .note-card.note-card-dark .mat-mdc-checkbox .mdc-label { color: #edf1f6; }
+html.dark-theme .note-card.note-card-dark .mat-mdc-checkbox .mdc-label {
+  color: #edf1f6;
+}
 
-html.dark-theme .editor-count,
-html.dark-theme .editor-count-shortcut,
-html.dark-theme .checklist-tools button,
-html.dark-theme .add-checklist-item,
-html.dark-theme .reminder-presets button,
-html.dark-theme .sharing-empty,
-html.dark-theme .viewer-empty {
-  color: #aeb8c5;
-}
-html.dark-theme .sharing-list-heading > span,
-html.dark-theme .sharing-avatar {
-  border: 1px solid #414a56;
-}
-html.dark-theme .sharing-person-role .mat-mdc-select-value,
-html.dark-theme .sharing-person-role .mat-mdc-select-arrow {
-  color: #e2e8f0;
-}
-html.dark-theme .viewer-item-complete { color: #aab4c1; }
-html.dark-theme .viewer-checklist-item mat-icon { color: #bdc7d3; }
-
-/* Material controls: make labels, values, outlines and states readable in dark mode. */
-html.dark-theme .mat-mdc-form-field {
-  --mdc-outlined-text-field-input-text-color: #e7ecf3;
-  --mdc-outlined-text-field-label-text-color: #aeb9c6;
-  --mdc-outlined-text-field-hover-outline-color: #9aa8b8;
-  --mdc-outlined-text-field-focus-outline-color: #9bc2ff;
-  --mdc-outlined-text-field-outline-color: #586372;
-  --mdc-outlined-text-field-input-text-placeholder-color: #aeb9c6;
-  --mat-form-field-enabled-select-arrow-color: #b7c2cf;
-  --mat-form-field-focus-select-arrow-color: #9bc2ff;
-}
-html.dark-theme .mat-mdc-form-field .mdc-notched-outline__leading,
-html.dark-theme .mat-mdc-form-field .mdc-notched-outline__notch,
-html.dark-theme .mat-mdc-form-field .mdc-notched-outline__trailing {
-  border-color: #586372;
-}
-html.dark-theme .mat-mdc-form-field.mat-focused .mdc-notched-outline__leading,
-html.dark-theme .mat-mdc-form-field.mat-focused .mdc-notched-outline__notch,
-html.dark-theme .mat-mdc-form-field.mat-focused .mdc-notched-outline__trailing {
-  border-color: #9bc2ff;
-}
-html.dark-theme .mat-mdc-form-field .mat-mdc-select-arrow,
-html.dark-theme .mat-mdc-select-arrow,
-html.dark-theme .mat-mdc-select-placeholder,
-html.dark-theme .mat-mdc-select-value-text { color: #dce4ee; }
-html.dark-theme .mat-mdc-form-field-hint,
-html.dark-theme .mat-mdc-form-field-error,
-html.dark-theme .mat-mdc-form-field-subscript-wrapper { color: #aeb8c5; }
-html.dark-theme .mat-mdc-checkbox {
-  --mdc-checkbox-label-text-color: #dfe6ef;
-  --mdc-checkbox-unselected-icon-color: #b7c2cf;
-  --mdc-checkbox-unselected-hover-icon-color: #d5dfeb;
-  --mdc-checkbox-selected-checkmark-color: #152235;
-}
-html.dark-theme .mat-mdc-checkbox .mdc-label,
-html.dark-theme .mat-mdc-radio-button .mdc-label { color: #dfe6ef; }
-html.dark-theme .mat-mdc-chip,
-html.dark-theme .mat-mdc-standard-chip {
-  --mdc-chip-label-text-color: #dce4ed;
-  --mdc-chip-with-trailing-icon-trailing-icon-color: #c2ccda;
-}
-html.dark-theme .mat-mdc-chip-option,
-html.dark-theme .mat-mdc-chip-option .mdc-evolution-chip__text-label { color: #dce4ed; }
-html.dark-theme .mat-mdc-chip-option.mdc-evolution-chip--selected {
-  background: #29415f;
-  --mdc-chip-label-text-color: #dceaff;
-}
-html.dark-theme .mat-mdc-menu-item .mat-mdc-menu-item-text,
-html.dark-theme .mat-mdc-option .mdc-list-item__primary-text { color: #e5eaf1; }
-html.dark-theme .mat-mdc-option.mdc-list-item--selected:not(.mdc-list-item--disabled) {
-  background: #2c415d;
-}
-html.dark-theme .mat-mdc-menu-item.mat-mdc-menu-item-disabled,
-html.dark-theme .mat-mdc-option.mdc-list-item--disabled { color: #8994a2; }
-html.dark-theme .mat-mdc-button-base:disabled,
-html.dark-theme .mat-mdc-button-base[disabled] { opacity: .58; }
-html.dark-theme input,
-html.dark-theme textarea,
-html.dark-theme select {
-  color-scheme: dark;
-}
-html.dark-theme input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(.8); }
-html.dark-theme ::selection { color: #f4f7fb; background: #365b86; }
-
-/* Dialog-specific content lives in separate standalone components. */
-html.dark-theme .editor-heading h2,
-html.dark-theme .sharing-heading h2,
-html.dark-theme .sharing-list-heading h3,
-html.dark-theme .viewer-heading h2 { color: #edf1f6 !important; }
-html.dark-theme .editor-title,
-html.dark-theme .editor-body,
-html.dark-theme .editor-checklist-row input,
-html.dark-theme .reminder-field input[type="date"],
-html.dark-theme .viewer-note-text,
-html.dark-theme .viewer-checklist-item,
-html.dark-theme .sharing-person-email { color: #e6ecf4 !important; }
-html.dark-theme .editor-title::placeholder,
-html.dark-theme .editor-body::placeholder { color: #9aa7b6; opacity: 1; }
-html.dark-theme .editor-checklist-row input.item-checked,
-html.dark-theme .sharing-note-title,
-html.dark-theme .sharing-description,
-html.dark-theme .sharing-explainer,
-html.dark-theme .viewer-access,
-html.dark-theme .viewer-reminder,
-html.dark-theme .reminder-presets > span,
-html.dark-theme .color-label { color: #b5c0cd !important; }
-html.dark-theme .editor-type-switch { background: #2c333c; }
-html.dark-theme .editor-type-switch button { color: #c3ccd7; }
-html.dark-theme .editor-type-switch button.type-active {
-  background: #46515e;
-  color: #f2f5f9;
-}
-html.dark-theme .editor-checklist-row { border-bottom-color: #3a424d; }
-html.dark-theme .color-option { border-color: rgba(230, 237, 245, .42); }
-html.dark-theme .color-selected { outline-color: #9bc2ff; }
-html.dark-theme .sharing-explainer { background: #2a323c; }
-html.dark-theme .sharing-error { color: #ffb4ab; background: #512b2b; }
-html.dark-theme .sharing-message { color: #a8dab5; background: #1e3a2b; }
-html.dark-theme .viewer-updated { border-top-color: #39414b; color: #aeb8c5; }
-html.dark-theme .viewer-item-complete { color: #aeb8c5; }
-
-
-/* Final dark-mode polish for dialog controls, active navigation and overlays. */
+/* The note-color selection indicator remains visible on pastel swatches. */
 html.dark-theme .color-options .color-option mat-icon {
   display: inline-flex;
   align-items: center;
@@ -833,84 +676,22 @@ html.dark-theme .color-options .color-option mat-icon {
   height: 20px;
   border-radius: 50%;
   padding: 1px;
-  color: #ffffff !important;
-  background: rgba(24, 29, 35, .9);
+  color: var(--text-inverse) !important;
+  background: var(--color-swatch-check-bg);
   box-shadow: 0 1px 3px rgba(0, 0, 0, .45);
   font-size: 17px;
   line-height: 20px;
 }
 
-html.dark-theme .tags-field:not(.mat-focused) input::placeholder {
-  opacity: 0 !important;
-}
-html.dark-theme .tags-field.mat-focused input::placeholder {
-  color: #aeb9c6 !important;
-  opacity: 1 !important;
-}
-
-html.dark-theme .editor-type-switch button:not(.type-active),
-html.dark-theme .editor-type-switch button:not(.type-active) .mat-icon {
-  color: #dce5f0 !important;
-}
-html.dark-theme .editor-type-switch button.type-active,
-html.dark-theme .editor-type-switch button.type-active .mat-icon {
-  color: #ffffff !important;
-  background: #46515e;
-}
-
-html.dark-theme .primary-navigation button.nav-selected,
-html.dark-theme .primary-navigation button.nav-selected .mdc-list-item__primary-text,
-html.dark-theme .primary-navigation button.nav-selected [matListItemTitle] {
-  color: #f0f4fa !important;
-  background: #334150 !important;
-  font-weight: 600;
-}
-html.dark-theme .primary-navigation button.nav-selected mat-icon {
-  color: #c8dcf4 !important;
-}
-html.dark-theme .primary-navigation button.nav-selected:hover {
-  background: #3c4b5b !important;
-}
-
-html.dark-theme .cdk-overlay-container .mat-mdc-tooltip,
-html.dark-theme .mat-mdc-tooltip {
-  --mdc-plain-tooltip-container-color: #39434f;
-  --mdc-plain-tooltip-supporting-text-color: #f4f7fb;
-  --mat-tooltip-container-color: #39434f;
-  --mat-tooltip-supporting-text-color: #f4f7fb;
-}
-html.dark-theme .cdk-overlay-container .mat-mdc-tooltip .mdc-tooltip__surface,
-html.dark-theme .mat-mdc-tooltip .mdc-tooltip__surface {
-  border: 1px solid #566273;
-  background: #39434f !important;
-  color: #f4f7fb !important;
-  box-shadow: 0 4px 14px rgba(0, 0, 0, .35);
-}
-
-
-/* Final contrast fixes for snackbar actions and workspace heading text. */
-html.dark-theme .mat-mdc-snack-bar-container {
-  --mdc-snackbar-container-color: #303944;
-  --mdc-snackbar-supporting-text-color: #f1f5fa;
-  --mat-snack-bar-button-color: #c9ddff;
-  --mdc-text-button-label-text-color: #c9ddff;
-  --mat-text-button-label-text-color: #c9ddff;
-}
-html.dark-theme .mat-mdc-snack-bar-container .mat-mdc-snack-bar-action,
-html.dark-theme .mat-mdc-snack-bar-container .mat-mdc-snack-bar-action .mdc-button__label,
-html.dark-theme .mat-mdc-snack-bar-container .mat-mdc-snack-bar-action .mat-mdc-button-persistent-ripple {
-  color: #c9ddff !important;
-}
-html.dark-theme .mat-mdc-snack-bar-container .mat-mdc-snack-bar-action {
-  --mdc-text-button-label-text-color: #c9ddff;
-  --mat-text-button-label-text-color: #c9ddff;
-  font-weight: 600;
-}
-html.dark-theme .notes-heading,
-html.dark-theme .notes-heading h1 {
-  color: #f2f5f9 !important;
-}
-html.dark-theme .notes-heading span {
-  color: #c2ccd8 !important;
-  font-weight: 500;
+@media (prefers-reduced-motion: no-preference) {
+  body,
+  .sidebar,
+  .main-content,
+  .topbar,
+  .auth-card,
+  .note-card,
+  .reminder-calendar,
+  .reminder-summary {
+    transition: background-color .18s ease, border-color .18s ease, color .18s ease;
+  }
 }
