@@ -1,9 +1,11 @@
 import { Injectable } from '@angular/core';
 import { createClient, RealtimeChannel } from '@supabase/supabase-js';
-import { Note } from './note-editor-dialog.component';
+import type { Note, NoteAttachment } from './note-editor-dialog.component';
 
 const SUPABASE_URL = 'https://ohaofxocvmoaurdgyaso.supabase.co';
 const SUPABASE_PUBLISHABLE_KEY = 'sb_publishable_OeIjLtU8zsGDdcWz4WIujg_aHY3k_vR';
+
+const NOTE_ATTACHMENTS_BUCKET = 'note-attachments';
 
 export interface NoteShareRecord {
   id: string;
@@ -89,6 +91,7 @@ export class SupabaseService {
         archived: Boolean(row['archived']),
         trashed: Boolean(row['trashed']),
         reminderDate: typeof row['reminder_date'] === 'string' ? row['reminder_date'].slice(0, 10) : undefined,
+        attachments: this.normalizeAttachments(row['attachments']),
         createdAt: Number(row['created_at_ms']) || Date.now(),
         updatedAt: Number(row['updated_at_ms']) || Date.now()
       };
@@ -115,6 +118,7 @@ export class SupabaseService {
       archived: note.archived,
       trashed: note.trashed,
       reminder_date: note.reminderDate ?? null,
+      attachments: note.attachments ?? [],
       created_at_ms: note.createdAt,
       updated_at_ms: note.updatedAt,
       sort_order: sortOrder
@@ -160,6 +164,58 @@ export class SupabaseService {
         .in('id', staleIds);
       if (error) throw error;
     }
+  }
+
+  private normalizeAttachments(value: unknown): NoteAttachment[] {
+    if (!Array.isArray(value)) return [];
+    return value.filter((item): item is NoteAttachment =>
+      typeof item === 'object' && item !== null &&
+      typeof (item as NoteAttachment).id === 'string' &&
+      typeof (item as NoteAttachment).name === 'string' &&
+      typeof (item as NoteAttachment).path === 'string' &&
+      typeof (item as NoteAttachment).mimeType === 'string' &&
+      typeof (item as NoteAttachment).size === 'number'
+    ).map((item) => ({
+      id: item.id, name: item.name, path: item.path, mimeType: item.mimeType,
+      size: item.size, uploadedAt: Number(item.uploadedAt) || Date.now()
+    }));
+  }
+
+  async uploadNoteAttachment(ownerId: string, noteId: string, file: File): Promise<NoteAttachment> {
+    const safeName = file.name.replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 100) || 'attachment';
+    const id = typeof crypto !== 'undefined' && 'randomUUID' in crypto
+      ? crypto.randomUUID()
+      : Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 9);
+    const path = ownerId + '/' + noteId + '/' + id + '-' + safeName;
+    const { error } = await this.client.storage.from(NOTE_ATTACHMENTS_BUCKET).upload(path, file, {
+      cacheControl: '3600', upsert: false, contentType: file.type || 'application/octet-stream'
+    });
+    if (error) throw error;
+    return { id, name: file.name, path, mimeType: file.type || 'application/octet-stream', size: file.size, uploadedAt: Date.now() };
+  }
+
+  async downloadNoteAttachment(path: string): Promise<Blob> {
+    const { data, error } = await this.client.storage.from(NOTE_ATTACHMENTS_BUCKET).download(path);
+    if (error) throw error;
+    return data;
+  }
+
+  async removeNoteAttachments(paths: string[]): Promise<void> {
+    const uniquePaths = [...new Set(paths.filter(Boolean))];
+    if (!uniquePaths.length) return;
+    const { error } = await this.client.storage.from(NOTE_ATTACHMENTS_BUCKET).remove(uniquePaths);
+    if (error) throw error;
+  }
+
+  async copyNoteAttachment(attachment: NoteAttachment, ownerId: string, noteId: string): Promise<NoteAttachment> {
+    const id = typeof crypto !== 'undefined' && 'randomUUID' in crypto
+      ? crypto.randomUUID()
+      : Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 9);
+    const safeName = attachment.name.replace(/[^a-zA-Z0-9._-]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 100) || 'attachment';
+    const path = ownerId + '/' + noteId + '/' + id + '-' + safeName;
+    const { error } = await this.client.storage.from(NOTE_ATTACHMENTS_BUCKET).copy(attachment.path, path);
+    if (error) throw error;
+    return { ...attachment, id, path, uploadedAt: Date.now() };
   }
 
   async listNoteShares(ownerId: string, noteId: string): Promise<NoteShareRecord[]> {

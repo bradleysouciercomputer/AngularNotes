@@ -33,6 +33,25 @@
     <div class="viewer-note-text">{{ data.content || 'This note is empty.' }}</div>
   }
 
+  @if (data.attachments?.length) {
+    <section class="viewer-attachments" aria-label="Note attachments">
+      <h3><mat-icon>attach_file</mat-icon> Attachments <span>{{ data.attachments.length }}</span></h3>
+      @for (attachment of data.attachments; track attachment.id) {
+        <div class="viewer-attachment-row">
+          <mat-icon class="viewer-attachment-icon">{{ attachmentIcon(attachment) }}</mat-icon>
+          <div class="viewer-attachment-details">
+            <span class="viewer-attachment-name" [title]="attachment.name">{{ attachment.name }}</span>
+            <span class="viewer-attachment-size">{{ formatAttachmentSize(attachment.size) }}</span>
+          </div>
+          <button mat-icon-button type="button" (click)="downloadAttachment(attachment)" [disabled]="downloadingAttachmentId === attachment.id" [attr.aria-label]="'Download ' + attachment.name">
+            <mat-icon>{{ downloadingAttachmentId === attachment.id ? 'hourglass_top' : 'download' }}</mat-icon>
+          </button>
+        </div>
+      }
+      @if (attachmentError) { <p class="viewer-attachment-error" role="alert">{{ attachmentError }}</p> }
+    </section>
+  }
+
   <div class="viewer-updated">Last edited {{ data.updatedAt | date:'medium' }}</div>
 </mat-dialog-content>
 

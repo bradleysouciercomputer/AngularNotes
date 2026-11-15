@@ -485,6 +485,9 @@
           </div>
 
           <mat-card-actions class="note-footer">
+            <span class="note-attachment-count" *ngIf="note.attachments?.length" [matTooltip]="note.attachments?.length + ' attachment(s)'">
+              <mat-icon>attach_file</mat-icon>{{ note.attachments?.length }}
+            </span>
             <span class="note-date">{{ note.updatedAt | date:'MMM d' }}</span>
             <button *ngIf="note.trashed" mat-button (click)="restoreNote(note)">Restore</button>
             <button *ngIf="note.trashed" mat-button color="warn" (click)="permanentlyDelete(note)">Delete forever</button>

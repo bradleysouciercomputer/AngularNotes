@@ -19,7 +19,7 @@ import { MatSidenavModule } from '@angular/material/sidenav';
 import { MatSnackBar, MatSnackBarModule } from '@angular/material/snack-bar';
 import { MatToolbarModule } from '@angular/material/toolbar';
 import { MatTooltipModule } from '@angular/material/tooltip';
-import { Note, NoteDraft, NoteEditorDialogComponent } from './note-editor-dialog.component';
+import { Note, NoteAttachment, NoteDraft, NoteEditorDialogComponent } from './note-editor-dialog.component';
 import { SupabaseService } from './supabase.service';
 import { NoteSharingDialogComponent } from './note-sharing-dialog.component';
 import { NoteViewerDialogComponent } from './note-viewer-dialog.component';
@@ -70,6 +70,21 @@ function starterNotes(): Note[] {
   ];
 }
 
+function normalizeNoteAttachments(value: unknown): NoteAttachment[] {
+  if (!Array.isArray(value)) return [];
+  return value.filter((item): item is NoteAttachment =>
+    typeof item === 'object' && item !== null &&
+    typeof (item as NoteAttachment).id === 'string' &&
+    typeof (item as NoteAttachment).name === 'string' &&
+    typeof (item as NoteAttachment).path === 'string' &&
+    typeof (item as NoteAttachment).mimeType === 'string' &&
+    typeof (item as NoteAttachment).size === 'number'
+  ).map((item) => ({
+    id: item.id, name: item.name, path: item.path, mimeType: item.mimeType,
+    size: item.size, uploadedAt: Number(item.uploadedAt) || Date.now()
+  }));
+}
+
 function normalizeNotes(parsed: unknown): Note[] {
   if (!Array.isArray(parsed)) return [];
   return parsed.filter((item): item is Note =>
@@ -96,6 +111,7 @@ function normalizeNotes(parsed: unknown): Note[] {
     archived: Boolean(item.archived),
     trashed: Boolean(item.trashed),
     reminderDate: typeof item.reminderDate === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(item.reminderDate) ? item.reminderDate : undefined,
+    attachments: normalizeNoteAttachments(item.attachments),
     ownerId: typeof item.ownerId === 'string' ? item.ownerId : undefined,
     shareRole: item.shareRole === 'viewer' || item.shareRole === 'editor' || item.shareRole === 'owner' ? item.shareRole : undefined,
     createdAt: Number(item.createdAt) || Date.now(),
@@ -188,6 +204,7 @@ export class AppComponent {
   private realtimeReloadTimer: ReturnType<typeof setTimeout> | null = null;
   private cloudWriteInProgress = false;
   private lastSyncedSnapshot = '';
+  private readonly pendingAttachmentDeletes = new Map<string, { userId: string; paths: string[] }>();
   private notesChannel: ReturnType<SupabaseService['subscribeToNotes']> | null = null;
   readonly activeTag = signal<string | null>(null);
   readonly selectionMode = signal(false);
@@ -502,6 +519,15 @@ export class AppComponent {
       if (this.currentUser()?.id === userId) {
         this.lastSyncedSnapshot = snapshot;
         this.cloudStatus.set('saved');
+        for (const [key, pending] of this.pendingAttachmentDeletes) {
+          if (pending.userId !== userId) continue;
+          try {
+            await this.supabase.removeNoteAttachments(pending.paths);
+            this.pendingAttachmentDeletes.delete(key);
+          } catch {
+            this.snackBar.open('The note was saved, but a removed attachment could not be cleaned up yet. It will be retried after your next cloud save.', 'Dismiss', { duration: 5000 });
+          }
+        }
       }
     } catch (error) {
       if (this.currentUser()?.id === userId) {
@@ -783,7 +809,8 @@ export class AppComponent {
       const { ownerId: _ownerId, shareRole: _shareRole, ...copySource } = note;
       return {
       ...copySource,
-      id: this.makeId(),
+      id: newId,
+      attachments: copiedAttachments,
       title: note.title.trim() ? note.title.trim() + ' (copy)' : 'Untitled note (copy)',
       checklistItems: (note.checklistItems || []).map((item) => ({ ...item, id: this.makeId('item') })),
       pinned: false,
@@ -1026,13 +1053,29 @@ export class AppComponent {
       }
     );
     ref.afterClosed().subscribe((draft) => {
-      if (!draft || (!draft.title.trim() && !draft.content.trim() && !draft.checklistItems.some((item) => item.text.trim()))) return;
+      if (!draft) return;
+      const { removedAttachmentPaths = [], ...noteDraft } = draft;
+      if (!noteDraft.title.trim() && !noteDraft.content.trim() &&
+          !noteDraft.checklistItems.some((item) => item.text.trim()) &&
+          !(noteDraft.attachments?.length) && !(note.attachments?.length)) return;
       const saved: Note = {
-        ...note, ...draft, title: draft.title.trim() || 'Untitled note',
-        tags: draft.tags, updatedAt: Date.now()
+        ...note, ...noteDraft, title: noteDraft.title.trim() || 'Untitled note',
+        tags: noteDraft.tags, attachments: noteDraft.attachments ?? note.attachments ?? [], updatedAt: Date.now()
       };
       this.notes.update((current) => [saved, ...current.filter((item) => item.id !== saved.id)]);
       this.activeView.set(this.isSharedNote(saved) ? 'shared' : 'all');
+      if (removedAttachmentPaths.length) {
+        const user = this.currentUser();
+        if (user) {
+          const ownerId = saved.ownerId || user.id;
+          const key = ownerId + ':' + saved.id;
+          const existing = this.pendingAttachmentDeletes.get(key);
+          this.pendingAttachmentDeletes.set(key, {
+            userId: user.id,
+            paths: [...new Set([...(existing?.paths ?? []), ...removedAttachmentPaths])]
+          });
+        }
+      }
       this.snackBar.open('Note saved', 'Dismiss', { duration: 1800 });
     });
   }
@@ -1211,8 +1254,25 @@ export class AppComponent {
     this.patchNote(note.id, { checklistItems });
   }
 
-  duplicateNote(note: Note): void {
+  async duplicateNote(note: Note): Promise<void> {
     const now = Date.now();
+    const user = this.currentUser();
+    const newId = this.makeId();
+    const copiedAttachments: NoteAttachment[] = [];
+    try {
+      if (user) {
+        for (const attachment of (note.attachments ?? [])) {
+          copiedAttachments.push(await this.supabase.copyNoteAttachment(attachment, user.id, newId));
+        }
+      }
+    } catch (error) {
+      if (copiedAttachments.length) {
+        try { await this.supabase.removeNoteAttachments(copiedAttachments.map((item) => item.path)); } catch { /* Preserve original attachments if rollback fails. */ }
+      }
+      this.snackBar.open(error instanceof Error ? error.message : 'Could not copy the note attachments.', 'Dismiss', { duration: 4000 });
+      return;
+    }
+
     const { ownerId: _ownerId, shareRole: _shareRole, ...copySource } = note;
     const copy: Note = {
       ...copySource,
@@ -1314,18 +1374,43 @@ export class AppComponent {
     this.snackBar.open('Note restored', 'Dismiss', { duration: 1800 });
   }
 
-  permanentlyDelete(note: Note): void {
+  async permanentlyDelete(note: Note): Promise<void> {
     if (this.isSharedNote(note)) {
       void this.leaveSharedNote(note);
       return;
+    }
+    const user = this.currentUser();
+    const paths = (note.attachments ?? []).map((attachment) => attachment.path);
+    if (user && paths.length) {
+      const key = (note.ownerId || user.id) + ':' + note.id;
+      const existing = this.pendingAttachmentDeletes.get(key);
+      this.pendingAttachmentDeletes.set(key, {
+        userId: user.id,
+        paths: [...new Set([...(existing?.paths ?? []), ...paths])]
+      });
     }
     this.notes.update((current) => current.filter((item) => item.id !== note.id));
     this.snackBar.open('Note permanently deleted', 'Dismiss', { duration: 1800 });
   }
 
-  emptyTrash(): void {
+  async emptyTrash(): Promise<void> {
     const total = this.count('trash');
     if (total === 0 || !confirm('Permanently delete all ' + total + ' notes in the trash? This cannot be undone.')) return;
+    const user = this.currentUser();
+    const trashedNotes = this.notes().filter((note) => note.trashed);
+    if (user) {
+      for (const note of trashedNotes) {
+        if (this.isSharedNote(note)) continue;
+        const paths = (note.attachments ?? []).map((attachment) => attachment.path);
+        if (!paths.length) continue;
+        const key = (note.ownerId || user.id) + ':' + note.id;
+        const existing = this.pendingAttachmentDeletes.get(key);
+        this.pendingAttachmentDeletes.set(key, {
+          userId: user.id,
+          paths: [...new Set([...(existing?.paths ?? []), ...paths])]
+        });
+      }
+    }
     this.notes.update((current) => current.filter((note) => !note.trashed));
     this.snackBar.open('Trash emptied', 'Dismiss', { duration: 1800 });
   }

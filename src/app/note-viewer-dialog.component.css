@@ -50,3 +50,17 @@
 .viewer-item-complete { color: #80868b; text-decoration: line-through; }
 .viewer-empty { color: #80868b; font-size: 13px; }
 .viewer-updated { margin-top: 24px; padding-top: 12px; border-top: 1px solid #f1f3f4; color: #80868b; font-size: 11px; }
+
+
+.viewer-attachments { display: flex; flex-direction: column; gap: 8px; margin-top: 22px; }
+.viewer-attachments h3 { display: flex; align-items: center; gap: 7px; margin: 0; color: #202124; font-size: 14px; font-weight: 500; }
+.viewer-attachments h3 mat-icon { width: 18px; height: 18px; font-size: 18px; }
+.viewer-attachments h3 span { color: #80868b; font-size: 11px; }
+.viewer-attachment-row { display: flex; align-items: center; gap: 9px; min-width: 0; padding: 6px 6px 6px 10px; border: 1px solid #e8eaed; border-radius: 9px; }
+.viewer-attachment-icon { flex: 0 0 20px; color: #5f6368; }
+.viewer-attachment-details { display: flex; flex: 1 1 auto; flex-direction: column; gap: 2px; min-width: 0; }
+.viewer-attachment-name { overflow: hidden; color: #202124; font-size: 12px; text-overflow: ellipsis; white-space: nowrap; }
+.viewer-attachment-size { color: #80868b; font-size: 10px; }
+.viewer-attachment-row button { flex: 0 0 36px; }
+.viewer-attachment-row button mat-icon { font-size: 19px; }
+.viewer-attachment-error { margin: 0; padding: 8px 10px; border-radius: 8px; color: #b3261e; background: #fce8e6; font-size: 12px; }

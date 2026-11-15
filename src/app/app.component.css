@@ -812,3 +812,7 @@
   .reminder-summary { gap: 10px 16px; padding: 11px 12px; }
   .reminder-summary p { flex-basis: 100%; }
 }
+
+
+.note-attachment-count { display: inline-flex; align-items: center; gap: 3px; margin-right: 8px; color: #5f6368; font-size: 10px; font-variant-numeric: tabular-nums; }
+.note-attachment-count mat-icon { width: 15px; height: 15px; font-size: 15px; }

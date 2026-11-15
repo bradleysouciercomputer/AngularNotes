@@ -1,6 +1,6 @@
 <div class="editor-heading">
   <h2 mat-dialog-title>{{ data.title ? 'Edit note' : 'New note' }}</h2>
-  <button mat-icon-button mat-dialog-close aria-label="Close editor">
+  <button mat-icon-button mat-dialog-close aria-label="Close editor" [disabled]="attachmentBusy">
     <mat-icon>close</mat-icon>
   </button>
 </div>
@@ -35,6 +35,32 @@
       <mat-icon>add</mat-icon> Add item
     </button>
   </div>
+
+
+  <section class="attachments-section" aria-label="Note attachments">
+    <div class="attachments-heading">
+      <div><h3>Attachments</h3><span>{{ attachmentCount }} of 20 files</span></div>
+      <button *ngIf="canManageAttachments" mat-stroked-button type="button" (click)="attachmentPicker.click()" [disabled]="attachmentBusy || attachmentCount >= 20">
+        <mat-icon>attach_file</mat-icon> Add files
+      </button>
+      <input #attachmentPicker class="attachment-file-input" type="file" multiple (change)="onAttachmentFilesSelected($event)">
+    </div>
+    <div class="attachment-list" *ngIf="attachments.length || pendingAttachments.length">
+      <div class="attachment-row" *ngFor="let attachment of attachments">
+        <mat-icon class="attachment-file-icon">{{ attachmentIcon(attachment) }}</mat-icon>
+        <div class="attachment-details"><span class="attachment-name" [title]="attachment.name">{{ attachment.name }}</span><span class="attachment-size">{{ formatAttachmentSize(attachment.size) }}</span></div>
+        <button mat-icon-button type="button" (click)="downloadAttachment(attachment)" [disabled]="downloadingAttachmentId === attachment.id" matTooltip="Download attachment" [attr.aria-label]="'Download ' + attachment.name"><mat-icon>{{ downloadingAttachmentId === attachment.id ? 'hourglass_top' : 'download' }}</mat-icon></button>
+        <button *ngIf="canManageAttachments" mat-icon-button type="button" (click)="removeSavedAttachment(attachment)" [disabled]="attachmentBusy" matTooltip="Remove attachment" [attr.aria-label]="'Remove ' + attachment.name"><mat-icon>close</mat-icon></button>
+      </div>
+      <div class="attachment-row attachment-pending" *ngFor="let file of pendingAttachments">
+        <mat-icon class="attachment-file-icon">{{ attachmentIcon({ mimeType: file.type, name: file.name }) }}</mat-icon>
+        <div class="attachment-details"><span class="attachment-name" [title]="file.name">{{ file.name }}</span><span class="attachment-size">{{ formatAttachmentSize(file.size) }} · Ready to upload</span></div>
+        <button mat-icon-button type="button" (click)="removePendingAttachment(file)" [disabled]="attachmentBusy" matTooltip="Remove file" [attr.aria-label]="'Remove ' + file.name"><mat-icon>close</mat-icon></button>
+      </div>
+    </div>
+    <p class="attachments-help">Attach documents, images, PDFs, and other files. Each file can be up to 20 MB.</p>
+    <p class="attachments-error" *ngIf="attachmentError" role="alert">{{ attachmentError }}</p>
+  </section>
 
   <mat-form-field appearance="outline" class="reminder-field">
     <mat-label>Reminder date</mat-label>
@@ -89,6 +115,6 @@
 </mat-dialog-content>
 
 <mat-dialog-actions align="end">
-  <button mat-button mat-dialog-close>Cancel</button>
-  <button mat-flat-button color="primary" (click)="save()" [disabled]="!title.trim() && !content.trim() && !hasChecklistText()">Save</button>
+  <button mat-button mat-dialog-close [disabled]="attachmentBusy">Cancel</button>
+  <button mat-flat-button color="primary" (click)="save()" [disabled]="attachmentBusy || (!title.trim() && !content.trim() && !hasChecklistText() && attachmentCount === 0 && removedAttachments.length === 0)">{{ attachmentBusy ? "Saving…" : "Save" }}</button>
 </mat-dialog-actions>
